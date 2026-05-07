@@ -8,8 +8,8 @@ from services.member_service import (
 from ui.excel_file_maker import export_to_excel
 
 class MembersFrame(ctk.CTkFrame):
-    def __init__(self, parent):
-        super().__init__(parent, fg_color="transparent")
+    def __init__(self, content_area):
+        super().__init__(content_area, fg_color="transparent")
 
         self.grid_rowconfigure(0, weight=0)  # topbar
         self.grid_rowconfigure(1, weight=1)  # table expands
@@ -29,7 +29,7 @@ class MembersFrame(ctk.CTkFrame):
 
     def _build_topbar(self):
         # ── Topbar container ───────────────────────────────────────────
-        self.topbar_frame = ctk.CTkFrame(self, height=DATA_FRAME_UI['topbar_height'])          # 1. separate creation
+        self.topbar_frame = ctk.CTkFrame(self, height=DATA_FRAME_UI['topbar_height'])
         self.topbar_frame.grid(row=0, column=0, sticky="ew", padx=DATA_FRAME_UI['padding_x'], pady=DATA_FRAME_UI['padding_y'])
 
         # Give topbar 4 columns: search entry | search btn | add btn | export
@@ -41,7 +41,7 @@ class MembersFrame(ctk.CTkFrame):
         self.topbar_frame.grid_columnconfigure(3, weight=0)
 
         # ── Search entry ───────────────────────────────────────────────
-        ctk.CTkLabel(self.topbar_frame, text="Search by ID or Name", font=ctk.CTkFont(size=10)).grid(row=0, column=0, padx=(6,4), pady=(1,0), sticky="w")
+        ctk.CTkLabel(self.topbar_frame, text="Search by MemberID or MemberName", font=ctk.CTkFont(size=10)).grid(row=0, column=0, padx=(6,4), pady=(1,0), sticky="w")
 
         # ── Search entry ───────────────────────────────────────────────
         self.searchbar_var = ctk.StringVar(value="")
@@ -121,19 +121,19 @@ class MembersFrame(ctk.CTkFrame):
         # ── Table Section ───────────────────────────────────────────
         self.table = ttk.Treeview(self.table_frame, columns= ('member_id', 'name', 'phone_no', 'email', 'gender', 'join_date'), show= 'headings', selectmode="browse")
         self.table.heading('member_id', text= 'Member_ID')
-        self.table.heading('name', text= 'Name')
-        self.table.heading('phone_no', text= 'Phone_No')
-        self.table.heading('email', text= 'Email')
-        self.table.heading('gender', text= 'Gender')
+        self.table.heading('name',      text= 'Name')
+        self.table.heading('phone_no',  text= 'Phone_No')
+        self.table.heading('email',     text= 'Email')
+        self.table.heading('gender',    text= 'Gender')
         self.table.heading('join_date', text= 'Join Date')
 
         # Column widths
-        self.table.column('member_id', width=50,  anchor='center')
-        self.table.column('name',      width=160)
-        self.table.column('phone_no',  width=120)
-        self.table.column('email',     width=180)
-        self.table.column('gender',    width=80,  anchor='center')
-        self.table.column('join_date', width=100, anchor='center')
+        self.table.column('member_id', width=150, minwidth=150, anchor='center')
+        self.table.column('name',      width=250, minwidth=250)
+        self.table.column('phone_no',  width=150, minwidth=150)
+        self.table.column('email',     width=200, minwidth=200)
+        self.table.column('gender',    width=100, minwidth=100, anchor='center')
+        self.table.column('join_date', width=150, minwidth=150, anchor='center')
 
         self.table.bind('<<TreeviewSelect>>', self._on_row_select)
 
