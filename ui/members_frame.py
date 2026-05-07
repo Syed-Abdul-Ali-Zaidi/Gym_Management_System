@@ -1,0 +1,461 @@
+import customtkinter as ctk
+from tkinter import ttk, messagebox
+from config.ui_config import DATA_FRAME_UI, FORM_UI
+from services.member_service import (
+    get_all_member, search_member,
+    insert_member, update_member, delete_member
+)
+from ui.excel_file_maker import export_to_excel
+
+class MembersFrame(ctk.CTkFrame):
+    def __init__(self, parent):
+        super().__init__(parent, fg_color="transparent")
+
+        self.grid_rowconfigure(0, weight=0)  # topbar
+        self.grid_rowconfigure(1, weight=1)  # table expands
+        self.grid_rowconfigure(2, weight=0)  # action bar
+        self.grid_columnconfigure(0, weight=1)
+
+        # ── Instance variables ─────────────────────────────
+        self.selected_row = None  # stores selected row as dict
+        self.form_mode    = None  # "add" or "edit"
+
+        # ── Build UI ───────────────────────────────────────
+        self._build_topbar()
+        self._build_table()
+
+        # ── Load data on open ──────────────────────────────
+        self.load_data()
+
+    def _build_topbar(self):
+        # ── Topbar container ───────────────────────────────────────────
+        self.topbar_frame = ctk.CTkFrame(self, height=DATA_FRAME_UI['topbar_height'])          # 1. separate creation
+        self.topbar_frame.grid(row=0, column=0, sticky="ew", padx=DATA_FRAME_UI['padding_x'], pady=DATA_FRAME_UI['padding_y'])
+
+        # Give topbar 4 columns: search entry | search btn | add btn | export
+        self.topbar_frame.grid_rowconfigure(0, weight=0)
+        self.topbar_frame.grid_rowconfigure(1, weight=1)
+        self.topbar_frame.grid_columnconfigure(0, weight=1)        # search entry stretches
+        self.topbar_frame.grid_columnconfigure(1, weight=0)        # buttons fixed
+        self.topbar_frame.grid_columnconfigure(2, weight=0)
+        self.topbar_frame.grid_columnconfigure(3, weight=0)
+
+        # ── Search entry ───────────────────────────────────────────────
+        ctk.CTkLabel(self.topbar_frame, text="Search by ID or Name", font=ctk.CTkFont(size=10)).grid(row=0, column=0, padx=(6,4), pady=(1,0), sticky="w")
+
+        # ── Search entry ───────────────────────────────────────────────
+        self.searchbar_var = ctk.StringVar(value="")
+        self.search_bar_entry = ctk.CTkEntry(
+            self.topbar_frame,
+            height=DATA_FRAME_UI['btn_height'],
+            border_width=1,
+            border_color=DATA_FRAME_UI['btn_text'],
+            textvariable=self.searchbar_var
+        )
+        self.search_bar_entry.grid(row=1, column=0, padx=(6,4), pady=(0,6), sticky="ew")
+
+        # Adding trace to Variable. means calling a function whenever variable's value changes
+        self.searchbar_var.trace_add("write", self._on_search)
+
+        # ── Search button ──────────────────────────────────────────────
+        self.search_btn = ctk.CTkButton(
+            self.topbar_frame,
+            text="🔍 Search",
+            width=DATA_FRAME_UI['topbar_btn_width'],
+            height=DATA_FRAME_UI['btn_height'],
+            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
+            fg_color=DATA_FRAME_UI['btn_fg'],
+            border_width=DATA_FRAME_UI['btn_border'],
+            hover_color=DATA_FRAME_UI['btn_hover'],
+            text_color=DATA_FRAME_UI['btn_text'],
+            command=self._on_search
+        )
+        self.search_btn.grid(row=1, column=1, padx=4, pady=(1,6))
+
+        # ── Add button ─────────────────────────────────────────────────
+        self.add_btn = ctk.CTkButton(
+            self.topbar_frame,
+            text="+ Add New",
+            width=DATA_FRAME_UI['topbar_btn_width'],
+            height=DATA_FRAME_UI['btn_height'],
+            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
+            fg_color=DATA_FRAME_UI['btn_fg'],
+            border_width=DATA_FRAME_UI['btn_border'],
+            hover_color=DATA_FRAME_UI['btn_hover'],
+            text_color=DATA_FRAME_UI['btn_text'],
+            command=self._on_add
+        )
+        self.add_btn.grid(row=1, column=2, padx=4, pady=(1,6))
+
+        # ── Export button ──────────────────────────────────────────────
+        self.export_btn = ctk.CTkButton(
+            self.topbar_frame,
+            text="📤 Export",
+            width=DATA_FRAME_UI['topbar_btn_width'],
+            height=DATA_FRAME_UI['btn_height'],
+            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
+            fg_color=DATA_FRAME_UI['btn_fg'],
+            border_width=DATA_FRAME_UI['btn_border'],
+            hover_color=DATA_FRAME_UI['btn_hover'],
+            text_color=DATA_FRAME_UI['btn_text'],
+            command=self._on_export
+        )
+        self.export_btn.grid(row=1, column=3, padx=(4,6), pady=(1,6))
+
+
+    def _build_table(self):
+        # ── Table container ───────────────────────────────────────────
+        self.table_frame = ctk.CTkFrame(self)
+        self.table_frame.grid(row=1, column=0, sticky="nsew", padx=DATA_FRAME_UI['padding_x'], pady=(0, 5))
+
+        self.table_frame.grid_rowconfigure(0, weight=1)     # row 0 stretches
+        self.table_frame.grid_columnconfigure(0, weight=1)  # col 0 stretches
+
+        # ── Table Styling ───────────────────────────────────────────
+        style = ttk.Style()
+        style.theme_use("clam")
+        
+        style.configure("Treeview.Heading", font=("Arial", 16, "bold"))
+        style.configure("Treeview", font=("Arial", 14), rowheight=35)
+
+        # ── Table Section ───────────────────────────────────────────
+        self.table = ttk.Treeview(self.table_frame, columns= ('member_id', 'name', 'phone_no', 'email', 'gender', 'join_date'), show= 'headings', selectmode="browse")
+        self.table.heading('member_id', text= 'Member_ID')
+        self.table.heading('name', text= 'Name')
+        self.table.heading('phone_no', text= 'Phone_No')
+        self.table.heading('email', text= 'Email')
+        self.table.heading('gender', text= 'Gender')
+        self.table.heading('join_date', text= 'Join Date')
+
+        # Column widths
+        self.table.column('member_id', width=50,  anchor='center')
+        self.table.column('name',      width=160)
+        self.table.column('phone_no',  width=120)
+        self.table.column('email',     width=180)
+        self.table.column('gender',    width=80,  anchor='center')
+        self.table.column('join_date', width=100, anchor='center')
+
+        self.table.bind('<<TreeviewSelect>>', self._on_row_select)
+
+        # Scroll Bar
+        self.scrollbar = ttk.Scrollbar(self.table_frame, orient="vertical", command=self.table.yview)
+        self.table.configure(yscrollcommand=self.scrollbar.set)
+
+        # Grid both Tree and ScrollBar
+        self.table.grid(row=0, column=0, sticky='nsew')
+        self.scrollbar.grid(row=0, column=1, sticky='ns')   # column 1, stretches vertically only
+
+        # ── ActionBar Section ──────────────────────────────────────────
+        self.action_bar = ctk.CTkFrame(self, height=DATA_FRAME_UI['actionbar_height'])
+        self.action_bar.grid(row=2, column=0, sticky="ew", padx=DATA_FRAME_UI['padding_x'], pady=DATA_FRAME_UI['padding_y'])
+
+        self.action_bar.grid_columnconfigure(0, weight=1)
+        self.action_bar.grid_columnconfigure(1, weight=0)
+        self.action_bar.grid_columnconfigure(2, weight=0)
+
+        self.selection_label = ctk.CTkLabel(self.action_bar, text='No Row Selected')
+        self.selection_label.grid(row=0, column=0, sticky="w", padx=10, pady=8)
+
+        # Delete button — red tint, disabled by default
+        self.delete_btn = ctk.CTkButton(
+            self.action_bar,
+            text='🗑 Delete',
+            width=DATA_FRAME_UI['actionbar_btn_width'],
+            height=DATA_FRAME_UI['btn_height'],
+            state="disabled",
+            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
+            fg_color=DATA_FRAME_UI['delete_fg'],
+            hover_color=DATA_FRAME_UI['delete_hover'],
+            text_color=DATA_FRAME_UI['delete_text'],
+            border_width=DATA_FRAME_UI['btn_border'],
+            command=self._on_delete
+        )
+        self.delete_btn.grid(row=0, column=2, padx=(4, 8), pady=8)
+
+        # Edit button — disabled by default
+        self.edit_btn = ctk.CTkButton(
+            self.action_bar,
+            text='✏ Edit',
+            width=DATA_FRAME_UI['actionbar_btn_width'],
+            height=DATA_FRAME_UI['btn_height'],
+            state="disabled",
+            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
+            fg_color=DATA_FRAME_UI['edit_fg'],
+            hover_color=DATA_FRAME_UI['edit_hover'],
+            text_color=DATA_FRAME_UI['edit_text'],
+            border_width=DATA_FRAME_UI['btn_border'],
+            command=self._on_edit
+        )
+        self.edit_btn.grid(row=0, column=1, padx=4, pady=8)
+
+
+
+
+    def load_data(self):
+        rows = get_all_member()
+        self._refresh_table(rows)
+
+    def _refresh_table(self,rows):
+        # Deletes existing rows
+        self.table.delete(*self.table.get_children())
+
+        # Creating Stripped row tags
+        self.table.tag_configure('oddrow', background=DATA_FRAME_UI['odd'])
+        self.table.tag_configure('evenrow', background=DATA_FRAME_UI['even'])
+        
+        count = 0
+        keys = ['evenrow', 'oddrow']
+
+        # inserts New Data
+        for row in rows:
+            tag = keys[count % 2]
+            formatted_date = row['join_date'].strftime("%d-%m-%Y")
+            self.table.insert(parent='', index= 'end', values=(
+                row['member_id'],
+                row['name'],
+                row['phone_no'] or '',  # if there is a NULL value Tree will show None so replace it with ""
+                row['email'] or '',
+                row['gender'],
+                formatted_date,),
+                tags= (tag,)
+            )
+
+            count += 1
+
+
+
+
+    def _on_search(self,  *args):
+        search_term = self.searchbar_var.get().strip()
+        # if there is no SearchTerm, Load Normal Data
+        if not search_term:
+            self.load_data()
+        # Else search the Data and load it
+        else:
+            rows = search_member(search_term)
+            self._refresh_table(rows)
+
+        # Clear selection after every search
+        self.selected_row = None
+        self.selection_label.configure(text='No row selected')
+        self.edit_btn.configure(state='disabled')
+        self.delete_btn.configure(state='disabled')
+
+    def _on_row_select(self, event):
+        column_names = ['member_id', 'name', 'phone_no', 'email', 'gender', 'join_date']
+        selected = self.table.selection()
+
+        if not selected:
+            self.selection_label.configure(text='No Row Selected')
+            return None
+        
+        item_id = selected[0]
+        values = self.table.item(item_id)["values"]
+        self.selected_row = dict(zip(column_names, values))
+
+        # Updating the Selection Label
+        self.selection_label.configure(text= f'ID: {self.selected_row['member_id']} | Name: {self.selected_row['name']}')
+
+        # Enabling the Edit and Delete bottons
+        self.delete_btn.configure(state='normal')
+        self.edit_btn.configure(state='normal')
+
+
+            
+
+    def _on_delete(self):
+        if self.selected_row is None:
+            return
+        
+        # First ask for confirmation on Delete
+        confirmed = messagebox.askyesno(title="Confirm", message="Delete this Member?")
+        if confirmed:
+            item_id = self.selected_row['member_id']
+            success = delete_member(item_id)
+
+            if success:   # deletion Successful
+                self.load_data()
+                # reseting selected row
+                self.selected_row = None
+
+                self.selection_label.configure(text='No Row Selected')
+                self.delete_btn.configure(state= 'disabled')
+                self.edit_btn.configure(state= 'disabled')
+            else:
+                messagebox.showerror(title="Error",
+                                     message="Could not delete member.\nThey may have an active membership."
+                                    )
+
+
+
+
+    def _on_add(self):
+        self._open_form('add')
+
+
+    def _on_edit(self):
+        if self.selected_row is None:
+            return
+        self._open_form('edit')
+
+    def _open_form(self, mode):
+        popup = ctk.CTkToplevel(self)
+        popup.title("Add Member" if mode == "add" else "Edit Member")
+        popup.geometry(f'{FORM_UI['width']}x{FORM_UI['height']}')
+        popup.resizable(False, False) 
+        
+        # Create StringVars here — they live as long as popup lives
+        self.name_var     = ctk.StringVar()
+        self.phone_var    = ctk.StringVar()
+        self.email_var    = ctk.StringVar()
+        self.gender_var   = ctk.StringVar()
+        self.join_date_var = ctk.StringVar()
+        
+        # Pass popup to field builder
+        self._build_form_fields(popup)
+        self._build_form_buttons(popup, mode)
+
+        if mode == 'edit':
+            self.name_var.set(self.selected_row['name'])
+            self.phone_var.set(self.selected_row['phone_no'] or '')
+            self.email_var.set(self.selected_row['email'] or '')
+            self.gender_var.set(self.selected_row['gender'])
+            self.join_date_var.set(self.selected_row['join_date'])
+        
+        popup.grab_set()    # User CANNOT click anything in the main window until popup closes
+        popup.transient(self.winfo_toplevel())    # Popup won't go behind the main window
+
+        
+
+    def _build_form_fields(self, popup):
+        form_frame = ctk.CTkFrame(popup)
+        form_frame.grid(row=0, column=0, padx=FORM_UI['padx'], pady=FORM_UI['pady'])
+
+        # Row 0 - Name
+        ctk.CTkLabel(form_frame, text="Name:").grid(row=0, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.name_var).grid(row=0, column=1, padx=10, pady=FORM_UI['row_pady'])
+
+        # Row 1 - Phone
+        ctk.CTkLabel(form_frame, text="Phone No:").grid(row=1, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.phone_var).grid(row=1, column=1, padx=10, pady=FORM_UI['row_pady'])
+
+        # Row 2 - Email
+        ctk.CTkLabel(form_frame, text="Email:").grid(row=2, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.email_var).grid(row=2, column=1, padx=10, pady=FORM_UI['row_pady'])
+
+        # Row 3 - Gender (Dropdown)
+        ctk.CTkLabel(form_frame, text="Gender:").grid(row=3, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+        ctk.CTkOptionMenu(form_frame, variable=self.gender_var, values=["Select Gender", "Male", "Female", "Other"]).grid(row=3, column=1, padx=10, pady=FORM_UI['row_pady'])
+
+        # Row 4 - Join Date
+        ctk.CTkLabel(form_frame, text="Join Date\n(DD-MM-YYYY)").grid(row=4, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.join_date_var).grid(row=4, column=1, padx=10, pady=FORM_UI['row_pady'])
+
+        # Row 5 - Error message
+        self.error_label = ctk.CTkLabel(form_frame, text="", text_color=FORM_UI['error_color'])
+        self.error_label.grid(row=5, column=0, columnspan=2)
+
+        # Addinh traces to Each Variable. means calling a function whenever variable's value changes
+        self.name_var.trace_add("write", self._validate)
+        self.phone_var.trace_add("write", self._validate)
+        self.email_var.trace_add("write", self._validate)
+        self.gender_var.trace_add("write", self._validate)
+        self.join_date_var.trace_add("write", self._validate)
+
+    def _build_form_buttons(self, popup, mode):
+        btn_frame = ctk.CTkFrame(popup, fg_color="transparent")
+        btn_frame.grid(row=1, column=0, pady=(0, FORM_UI['btn_pady_bottom']))
+
+
+        self.save_btn = ctk.CTkButton(btn_frame, text="Save", width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'],state='disabled', text_color=DATA_FRAME_UI['btn_text'], command= lambda: self._on_save(popup,mode))
+        self.save_btn.pack(side="left", padx=FORM_UI['btn_padx'])
+
+        self.cancel_btn = ctk.CTkButton(btn_frame, text="Cancel", width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'], text_color=DATA_FRAME_UI['btn_text'], command= popup.destroy)
+        self.cancel_btn.pack(side="left", padx=FORM_UI['btn_padx'])
+
+    def _validate(self, *args):
+        from datetime import datetime
+
+        name      = self.name_var.get().strip()
+        phone     = self.phone_var.get().strip()
+        email     = self.email_var.get().strip()
+        gender    = self.gender_var.get().strip()
+        join_date = self.join_date_var.get().strip()
+
+        # Required: Name
+        if not name:
+            self._form_error("⚠ Name is required.")
+            return
+        if len(name) < 2 or len(name) > 50:
+            self._form_error("⚠ Name must be 2-50 characters.")
+            return
+        
+        # Required: gender
+        if gender not in ('Male', 'Female', 'Other'):
+            self._form_error("⚠ Please select a gender.")
+            return
+
+        # Required: join_date
+        if not join_date:
+            self._form_error("⚠ Join date is required.")
+            return
+        try:
+            datetime.strptime(join_date, '%d-%m-%Y')   # tries to parse the date
+        except ValueError:
+            self._form_error("⚠ Date must be valid DD-MM-YYYY.")
+            return
+        
+        # All passed
+        self._form_ok()
+
+    def _form_error(self, message):
+        """Show error and disable Save."""
+        self.error_label.configure(text= message)
+        self.save_btn.configure(state="disabled")
+
+    def _form_ok(self):
+        """Clear error and enable Save."""
+        self.error_label.configure(text= '')
+        self.save_btn.configure(state="normal")
+
+
+    def _on_save(self, popup, mode):
+        from datetime import datetime
+
+        name      = self.name_var.get().strip()
+        phone     = self.phone_var.get().strip()
+        email     = self.email_var.get().strip()
+        gender    = self.gender_var.get().strip()
+        join_date = self.join_date_var.get().strip()
+
+        formatted_date = datetime.strptime(join_date, "%d-%m-%Y").strftime("%Y-%m-%d")
+
+        if mode == 'add':
+            success = insert_member(name, phone, email, gender, formatted_date)
+        else:
+            member_id = self.selected_row['member_id']
+            success = update_member(member_id, name, phone, email, gender)
+        
+        if success:   # Insertion Successful
+            popup.destroy()
+            # reseting selected row
+            self.selected_row = None
+
+            self.load_data()   
+            self.selection_label.configure(text='No Row Selected')
+            self.delete_btn.configure(state= 'disabled')
+            self.edit_btn.configure(state= 'disabled')
+        else:
+            messagebox.showerror(title="Error",
+                                 message=f"Could not {mode} member. Check inputs or DB connection."
+                                )
+
+
+    def _on_export(self):
+        # Check if table has any rows
+        if not self.table.get_children():
+            messagebox.showwarning(title="Empty", message="No data to export.")
+            return
+        
+        export_to_excel(tree=self.table, default_filename="members_export")
+        
