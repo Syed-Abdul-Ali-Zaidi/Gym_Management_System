@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox
 from config.ui_config import DATA_FRAME_UI, FORM_UI
 from services.trainer_service import (
     get_all_trainer, search_trainer,
-    insert_trainer, update_trainer, delete_trainer
+    insert_trainer, update_trainer
 )
 from ui.excel_file_maker import export_to_excel
 

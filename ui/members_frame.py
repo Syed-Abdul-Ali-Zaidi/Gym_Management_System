@@ -209,9 +209,12 @@ class MembersFrame(ctk.CTkFrame):
         # inserts New Data
         for row in rows:
             tag = keys[count % 2]
+
+            formatted_id = f'MEM-{row['member_id']}'
             formatted_date = row['join_date'].strftime("%d-%m-%Y")
+
             self.table.insert(parent='', index= 'end', values=(
-                row['member_id'],
+                formatted_id,
                 row['name'],
                 row['phone_no'] or '',  # if there is a NULL value Tree will show None so replace it with ""
                 row['email'] or '',
@@ -227,11 +230,14 @@ class MembersFrame(ctk.CTkFrame):
 
     def _on_search(self,  *args):
         search_term = self.searchbar_var.get().strip()
+        search_term = search_term.upper()
         # if there is no SearchTerm, Load Normal Data
         if not search_term:
             self.load_data()
         # Else search the Data and load it
         else:
+            if search_term.startswith("MEM-"):
+                search_term = search_term.replace("MEM-","")
             rows = search_member(search_term)
             self._refresh_table(rows)
 

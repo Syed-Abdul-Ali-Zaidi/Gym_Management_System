@@ -208,8 +208,10 @@ class PlansFrame(ctk.CTkFrame):
         # inserts New Data
         for row in rows:
             tag = keys[count % 2]
+            formatted_id = f'PLN-{row['plan_id']}'
+
             self.table.insert(parent='', index= 'end', values=(
-                row['plan_id'],
+                formatted_id,
                 row['plan_name'],
                 row['duration_days'],
                 row['fee']),
@@ -223,11 +225,14 @@ class PlansFrame(ctk.CTkFrame):
 
     def _on_search(self,  *args):
         search_term = self.searchbar_var.get().strip()
+        search_term = search_term.upper()
         # if there is no SearchTerm, Load Normal Data
         if not search_term:
             self.load_data()
         # Else search the Data and load it
         else:
+            if search_term.startswith("PLN-"):
+                search_term = search_term.replace("PLN-","")
             rows = search_plan(search_term)
             self._refresh_table(rows)
 
