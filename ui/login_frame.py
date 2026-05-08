@@ -56,20 +56,20 @@ class LoginFrame(ctk.CTkFrame):
         ctk.CTkLabel(
             self.card,
             text="🏋️",
-            font=ctk.CTkFont(size=LOGIN_UI['emoji_size'])
+            font=ctk.CTkFont(family=LOGIN_UI['font_family'], size=LOGIN_UI['emoji_size'])
         ).pack(pady=(40, 0), padx=(35,0))
 
         # ── App title ──────────────────────────────────────────────────────────
         ctk.CTkLabel(
             self.card,
             text="Gym Management System",
-            font=ctk.CTkFont(size=LOGIN_UI['title_font_size'], weight="bold")
+            font=ctk.CTkFont(family=LOGIN_UI['font_family'], size=LOGIN_UI['title_font_size'], weight="bold")
         ).pack(pady=(8, 0))
 
         ctk.CTkLabel(
             self.card,
             text="Sign in to continue",
-            font=ctk.CTkFont(size=LOGIN_UI['subtitle_font_size']),
+            font=ctk.CTkFont(family=LOGIN_UI['font_family'], size=LOGIN_UI['subtitle_font_size']),
             text_color=LOGIN_UI['subtitle_color']
         ).pack(pady=(2, 20))
 
@@ -78,7 +78,8 @@ class LoginFrame(ctk.CTkFrame):
             self.card,
             text="Username",
             anchor="w",              # anchor="w" aligns text to the left
-            width=LOGIN_UI['label_width']
+            width=LOGIN_UI['label_width'],
+            font=ctk.CTkFont(family=LOGIN_UI['font_family'], size=LOGIN_UI['subtitle_font_size'])
         ).pack(padx=40, fill="x")   # fill="x" stretches label to full card width
 
         # StringVar: live variable that holds what user types
@@ -100,7 +101,8 @@ class LoginFrame(ctk.CTkFrame):
             self.card,
             text="Password",
             anchor="w",
-            width=LOGIN_UI['label_width']
+            width=LOGIN_UI['label_width'],
+            font=ctk.CTkFont(family=LOGIN_UI['font_family'], size=LOGIN_UI['subtitle_font_size'])
         ).pack(padx=40, fill="x")
 
         self.password_entry = ctk.CTkEntry(
@@ -122,7 +124,7 @@ class LoginFrame(ctk.CTkFrame):
             variable=self.show_pass_var,
             command=self._toggle_password,   # called on every toggle
             height=20,
-            font=ctk.CTkFont(size=LOGIN_UI['label_font_size'])
+            font=ctk.CTkFont(family=LOGIN_UI['font_family'], size=LOGIN_UI['label_font_size'])
         ).pack(padx=40, anchor="w", pady=(0, 16))
 
         # ── Error label ────────────────────────────────────────────────────────
@@ -133,7 +135,7 @@ class LoginFrame(ctk.CTkFrame):
             self.card,
             text="",                    # empty initially
             text_color=LOGIN_UI['error_color'],       # soft red
-            font=ctk.CTkFont(size=LOGIN_UI['label_font_size'])
+            font=ctk.CTkFont(family=LOGIN_UI['font_family'], size=LOGIN_UI['label_font_size'])
         )
         self.error_label.pack(pady=(0, 8))
 
@@ -143,7 +145,7 @@ class LoginFrame(ctk.CTkFrame):
             text="Login",
             width=LOGIN_UI['entry_width'],
             height=LOGIN_UI['entry_height'] + 2,
-            font=ctk.CTkFont(size=LOGIN_UI['button_font_size'], weight="bold"),
+            font=ctk.CTkFont(family=LOGIN_UI['font_family'], size=LOGIN_UI['button_font_size'], weight="bold"),
             fg_color=LOGIN_UI['btn_fg'],
             hover_color=LOGIN_UI['btn_hover'],
             border_width=1,
