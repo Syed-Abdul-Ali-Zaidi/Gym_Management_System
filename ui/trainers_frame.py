@@ -132,10 +132,10 @@ class TrainersFrame(ctk.CTkFrame):
         self.table.column('trainer_id',     width=150, minwidth=150, anchor='center')
         self.table.column('name',           width=250, minwidth=250)
         self.table.column('phone_no',       width=150, minwidth=150, anchor='center')
-        self.table.column('salary',         width=100, minwidth=100, anchor='center')
-        self.table.column('specialization', width=150, minwidth=150)
+        self.table.column('salary',         width=150, minwidth=150, anchor='center')
+        self.table.column('specialization', width=400, minwidth=400)
         self.table.column('status',         width=150, minwidth=150)
-        self.table.column('default_fee',    width=100, minwidth=100, anchor='center')
+        self.table.column('default_fee',    width=150, minwidth=150, anchor='center')
 
 
         self.table.bind('<<TreeviewSelect>>', self._on_row_select)
@@ -203,15 +203,16 @@ class TrainersFrame(ctk.CTkFrame):
         self.table.delete(*self.table.get_children())
 
         # Creating Stripped row tags
-        self.table.tag_configure('oddrow', background=DATA_FRAME_UI['odd'])
-        self.table.tag_configure('evenrow', background=DATA_FRAME_UI['even'])
-        
-        count = 0
-        keys = ['evenrow', 'oddrow']
+        self.table.tag_configure('Active', background=DATA_FRAME_UI['trainer_active'])
+        self.table.tag_configure('On-leave', background=DATA_FRAME_UI['trainer_on_leave'])
+        self.table.tag_configure('Terminated', background=DATA_FRAME_UI['trainer_terminated'])
+
+        #keys = ['active', 'onleave', 'terminated']('Active', 'On-leave', 'Terminated')
 
         # inserts New Data
         for row in rows:
-            tag = keys[count % 2]
+            tag = row['status']
+        
             self.table.insert(parent='', index= 'end', values=(
                 row['trainer_id'],
                 row['name'],
@@ -223,7 +224,6 @@ class TrainersFrame(ctk.CTkFrame):
                 tags= (tag,)
             )
 
-            count += 1
 
 
 
@@ -407,7 +407,7 @@ class TrainersFrame(ctk.CTkFrame):
 
         self.cancel_btn = ctk.CTkButton(btn_frame, text="Cancel", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']), width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'], text_color=DATA_FRAME_UI['btn_text'], command= popup.destroy)
         self.cancel_btn.pack(side="left", padx=FORM_UI['btn_padx'])
-# ststus, specialization, drops down above and below
+
     def _validate(self, *args):
         name           = self.name_var.get().strip()
         phone          = self.phone_var.get().strip()
@@ -472,7 +472,7 @@ class TrainersFrame(ctk.CTkFrame):
         phone          = self.phone_var.get().strip()
         salary         = self.salary_var.get().strip()
         status         = self.status_var.get().strip()
-        defaultfee     = self.default_fee_var.get().strip()
+        defaultfee     = self.default_fee_var.get().strip() or '0'  # Since DefaultFee is optional so if it is '' so replace it with '0'
 
         # Create a list of the names of all checked specializations
         selected_specs = [spec for spec, var in self.specialization_var.items() if var.get()]
