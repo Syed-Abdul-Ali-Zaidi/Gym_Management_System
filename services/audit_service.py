@@ -19,13 +19,13 @@ def get_all_audit():
         conn.close()
 
 def search_audit(searchterm):
-    '''This will search audit_log(s) by thier USER_ID or USERNAME or TABLE_NAME or ACTION'''
+    '''This will search audit_log(s) by thier USER_ID or USERNAME or ACTION or TABLE_NAME '''
     conn = get_db_connection()
     try:
         cursor = conn.cursor(dictionary=True)
         query = """
             SELECT * FROM audit_view
-            WHERE user_id=%s OR username LIKE %s OR table_name LIKE %s OR action LIKE %s
+            WHERE user_id=%s OR username LIKE %s OR action LIKE %s OR table_name LIKE %s
             ORDER BY timestamp DESC
         """
 
