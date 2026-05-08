@@ -159,22 +159,6 @@ class TrainersFrame(ctk.CTkFrame):
         self.selection_label = ctk.CTkLabel(self.action_bar, text='No Row Selected')
         self.selection_label.grid(row=0, column=0, sticky="w", padx=10, pady=8)
 
-        # Delete button — red tint, disabled by default
-        self.delete_btn = ctk.CTkButton(
-            self.action_bar,
-            text='🗑 Delete',
-            width=DATA_FRAME_UI['actionbar_btn_width'],
-            height=DATA_FRAME_UI['btn_height'],
-            state="disabled",
-            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
-            fg_color=DATA_FRAME_UI['delete_fg'],
-            hover_color=DATA_FRAME_UI['delete_hover'],
-            text_color=DATA_FRAME_UI['delete_text'],
-            border_width=DATA_FRAME_UI['btn_border'],
-            command=self._on_delete
-        )
-        self.delete_btn.grid(row=0, column=2, padx=(4, 8), pady=8)
-
         # Edit button — disabled by default
         self.edit_btn = ctk.CTkButton(
             self.action_bar,
@@ -189,7 +173,7 @@ class TrainersFrame(ctk.CTkFrame):
             border_width=DATA_FRAME_UI['btn_border'],
             command=self._on_edit
         )
-        self.edit_btn.grid(row=0, column=1, padx=4, pady=8)
+        self.edit_btn.grid(row=0, column=2, padx=(4, 8), pady=8)
 
 
 
@@ -242,7 +226,6 @@ class TrainersFrame(ctk.CTkFrame):
         self.selected_row = None
         self.selection_label.configure(text='No row selected')
         self.edit_btn.configure(state='disabled')
-        self.delete_btn.configure(state='disabled')
 
     def _on_row_select(self, event):
         column_names = ['trainer_id', 'name', 'phone_no', 'salary', 'specialization', 'status', 'default_fee']
@@ -259,37 +242,11 @@ class TrainersFrame(ctk.CTkFrame):
         # Updating the Selection Label
         self.selection_label.configure(text= f'ID: {self.selected_row['trainer_id']} | Name: {self.selected_row['name']}')
 
-        # Enabling the Edit and Delete bottons
-        self.delete_btn.configure(state='normal')
+        # Enabling the Edit botton
         self.edit_btn.configure(state='normal')
 
 
             
-
-    def _on_delete(self):
-        if self.selected_row is None:
-            return
-        
-        # First ask for confirmation on Delete
-        confirmed = messagebox.askyesno(title="Confirm", message="Delete this trainer?")
-        if confirmed:
-            item_id = self.selected_row['trainer_id']
-            success = delete_trainer(item_id)
-
-            if success:   # deletion Successful
-                self.load_data()
-                # reseting selected row
-                self.selected_row = None
-
-                self.selection_label.configure(text='No Row Selected')
-                self.delete_btn.configure(state= 'disabled')
-                self.edit_btn.configure(state= 'disabled')
-            else:
-                messagebox.showerror(title="Error",
-                                     message="Could not delete trainer.\nThey may have an member with active membership."
-                                    )
-
-
 
 
     def _on_add(self):
@@ -446,10 +403,6 @@ class TrainersFrame(ctk.CTkFrame):
         # Required: Phone
         # have to be done
 
-        # # Required: specialization
-        # if specialization not in ("Weight Training", "Cardio Fitness", "Yoga", "CrossFit", "Zumba", "Strength Training"):
-        #     self._form_error("Please select a specialization.")
-
         if not self.is_float(defaultfee):
             self._form_error("Please enter Default Fee in numbers only.")
     
@@ -493,7 +446,6 @@ class TrainersFrame(ctk.CTkFrame):
 
             self.load_data()   
             self.selection_label.configure(text='No Row Selected')
-            self.delete_btn.configure(state= 'disabled')
             self.edit_btn.configure(state= 'disabled')
         else:
             messagebox.showerror(title="Error",
