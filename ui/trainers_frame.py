@@ -304,26 +304,38 @@ class TrainersFrame(ctk.CTkFrame):
     def _open_form(self, mode):
         popup = ctk.CTkToplevel(self)
         popup.title("Add trainer" if mode == "add" else "Edit trainer")
-        popup.geometry(f'{FORM_UI['width']}x{FORM_UI['height']}')
+        popup.geometry('550x420')
         popup.resizable(False, False) 
         
         # Create StringVars here — they live as long as popup lives
         self.name_var           = ctk.StringVar()
         self.phone_var          = ctk.StringVar()
         self.salary_var         = ctk.StringVar()
-        self.specialization_var = ctk.StringVar()
         self.status_var         = ctk.StringVar()
         self.default_fee_var    = ctk.StringVar()
+
+        # Creating a Dict of Specs where each spec name is a BooleanVar()
+        self.spec_list = ["Weight Training", "Cardio Fitness", "Yoga", "CrossFit", "Zumba", "Strength Training"]
+        self.specialization_var = {}
+
+        for spec in self.spec_list:
+            self.specialization_var[spec] = ctk.BooleanVar(value=False)
         
         # Pass popup to field builder
         self._build_form_fields(popup)
         self._build_form_buttons(popup, mode)
 
         if mode == 'edit':
+            # First checking the ticked boxes
+            existing_specs = self.selected_row['specialization'].split(", ")
+            for spec in existing_specs:
+                clean_spec = spec.strip()
+                if clean_spec in self.specialization_var:
+                    self.specialization_var[clean_spec].set(True)
+                    
             self.name_var.          set(self.selected_row['name'])
             self.phone_var.         set(self.selected_row['phone_no'] or '')
             self.salary_var.        set(self.selected_row['salary'])
-            self.specialization_var.set(self.selected_row['specialization'] or '')
             self.status_var.        set(self.selected_row['status'])
             self.default_fee_var.   set(self.selected_row['default_fee'] or '0')
         
@@ -336,31 +348,45 @@ class TrainersFrame(ctk.CTkFrame):
         form_frame = ctk.CTkFrame(popup)
         form_frame.grid(row=0, column=0, padx=FORM_UI['padx'], pady=FORM_UI['pady'])
 
-        # Row 0 - Name
-        ctk.CTkLabel(form_frame, text="Name:").grid(row=0, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkEntry(form_frame, textvariable=self.name_var).grid(row=0, column=1, padx=10, pady=FORM_UI['row_pady'])
+        # Row 0 - Name ──────────────────────────────────
+        ctk.CTkLabel(form_frame, text="Name:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=0, column=0, padx=10, pady=(5,FORM_UI['row_pady']), sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.name_var).grid(row=0, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
-        # Row 1 - Phone
-        ctk.CTkLabel(form_frame, text="Phone No\n(without spaces):").grid(row=1, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkEntry(form_frame, textvariable=self.phone_var).grid(row=1, column=1, padx=10, pady=FORM_UI['row_pady'])
+        # Row 1 - Phone ──────────────────────────────────
+        ctk.CTkLabel(form_frame, text="Phone No\n(without spaces):", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=1, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.phone_var).grid(row=1, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
-        # Row 2 - salary
-        ctk.CTkLabel(form_frame, text="Salary:").grid(row=2, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkEntry(form_frame, textvariable=self.salary_var).grid(row=2, column=1, padx=10, pady=FORM_UI['row_pady'])
+        # Row 2 - salary ──────────────────────────────────
+        ctk.CTkLabel(form_frame, text="Salary:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=2, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.salary_var).grid(row=2, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
-        # Row 3 - specialization (Dropdown)
-        ctk.CTkLabel(form_frame, text="Specialization:").grid(row=3, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkOptionMenu(form_frame, variable=self.specialization_var, values=["Select Specialization", "Weight Training", "Cardio Fitness", "Yoga", "CrossFit", "Zumba", "Strength Training"]).grid(row=3, column=1, padx=10, pady=FORM_UI['row_pady'])
-
-        # Row 4 - Status
-        ctk.CTkLabel(form_frame, text="Status:").grid(row=4, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkOptionMenu(form_frame, variable=self.status_var, values=["Select Status", 'Active', 'On-leave', 'Terminated']).grid(row=4, column=1, padx=10, pady=FORM_UI['row_pady'])
+        # Row 3 - specialization (Check Boxes)
+        ctk.CTkLabel(form_frame, text="Specialization:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=3, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
         
-        # Row 5 - Default Fee
-        ctk.CTkLabel(form_frame, text="Default Fee:").grid(row=5, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkEntry(form_frame, textvariable=self.default_fee_var).grid(row=5, column=1, padx=10, pady=FORM_UI['row_pady'])
+        # Creating a Frame in r=3,c=1 for checkboxes
+        spec_frame = ctk.CTkFrame(form_frame, fg_color="transparent")
+        spec_frame.grid(row=3, column=1, padx=10, pady=FORM_UI['row_pady'], sticky="w")
 
-        # Row 6 - Error message
+        # Automatically arrange checkboxes, 3 per row
+        for i, spec in enumerate(self.spec_list):
+            row_idx = i // 3  # Integer division: 0, 0, 0, 1, 1, 1...
+            col_idx = i % 3   # Modulo division:  0, 1, 2, 0, 1, 2...
+            
+            chk = ctk.CTkCheckBox(spec_frame, text=spec, font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size = 11), variable=self.specialization_var[spec])
+            chk.grid(row=row_idx, column=col_idx, padx=(0, 10), pady=5, sticky=FORM_UI["entry_sticky"])
+            
+            # Attach trace directly to the checkbox variable
+            self.specialization_var[spec].trace_add("write", self._validate)
+
+        # Row 4 - Status (Dropdown) ──────────────────────────────────
+        ctk.CTkLabel(form_frame, text="Status:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=4, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+        ctk.CTkOptionMenu(form_frame, variable=self.status_var, values=["Select Status", 'Active', 'On-leave', 'Terminated'], fg_color= DATA_FRAME_UI['btn_fg'], dropdown_hover_color= DATA_FRAME_UI['btn_hover']).grid(row=4, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
+        
+        # Row 5 - Default Fee ──────────────────────────────────
+        ctk.CTkLabel(form_frame, text="Default Fee:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=5, column=0, padx=10, pady=(FORM_UI['row_pady'],5), sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.default_fee_var).grid(row=5, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
+
+        # Row 6 - Error message ──────────────────────────────────
         self.error_label = ctk.CTkLabel(form_frame, text="", text_color=FORM_UI['error_color'])
         self.error_label.grid(row=6, column=0, columnspan=2)
 
@@ -368,7 +394,6 @@ class TrainersFrame(ctk.CTkFrame):
         self.name_var.trace_add("write", self._validate)
         self.phone_var.trace_add("write", self._validate)
         self.salary_var.trace_add("write", self._validate)
-        self.specialization_var.trace_add("write", self._validate)
         self.status_var.trace_add("write", self._validate)
         self.default_fee_var.trace_add("write", self._validate)
 
@@ -377,44 +402,53 @@ class TrainersFrame(ctk.CTkFrame):
         btn_frame.grid(row=1, column=0, pady=(0, FORM_UI['btn_pady_bottom']))
 
 
-        self.save_btn = ctk.CTkButton(btn_frame, text="Save", width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'],state='disabled', text_color=DATA_FRAME_UI['btn_text'], command= lambda: self._on_save(popup,mode))
+        self.save_btn = ctk.CTkButton(btn_frame, text="Save", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']), width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'],state='disabled', text_color=DATA_FRAME_UI['btn_text'], command= lambda: self._on_save(popup,mode))
         self.save_btn.pack(side="left", padx=FORM_UI['btn_padx'])
 
-        self.cancel_btn = ctk.CTkButton(btn_frame, text="Cancel", width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'], text_color=DATA_FRAME_UI['btn_text'], command= popup.destroy)
+        self.cancel_btn = ctk.CTkButton(btn_frame, text="Cancel", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']), width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'], text_color=DATA_FRAME_UI['btn_text'], command= popup.destroy)
         self.cancel_btn.pack(side="left", padx=FORM_UI['btn_padx'])
 # ststus, specialization, drops down above and below
     def _validate(self, *args):
         name           = self.name_var.get().strip()
         phone          = self.phone_var.get().strip()
         salary         = self.salary_var.get().strip()
-        specialization = self.specialization_var.get().strip()
         status         = self.status_var.get().strip()
         defaultfee     = self.default_fee_var.get().strip()
+
+        # Check if at least ONE checkbox is ticked
+        specialization = False
+        for var in self.specialization_var.values():
+            specialization = True
+            break
 
         # Required: Name
         if not name:
             self._form_error("⚠ Name is required.")
             return
-        if len(name) < 2 or len(name) > 50:
+        elif len(name) < 2 or len(name) > 50:
             self._form_error("⚠ Name must be 2-50 characters.")
             return
         
         # Required: salary
-        if not self.is_float(salary):
+        elif not self.is_float(salary):
             self._form_error("⚠ Please enter Salary in numbers only.")
             return
 
         # Required: status
-        if status not in ('Active', 'On-leave', 'Terminated'):
+        elif status not in ('Active', 'On-leave', 'Terminated'):
             self._form_error("⚠ Status is required.")
+            return
+        
+        elif not specialization:
+            self._form_error("Please select a specialization.")
             return
 
         # Required: Phone
         # have to be done
 
-        # Required: specialization
-        if specialization not in ("Weight Training", "Cardio Fitness", "Yoga", "CrossFit", "Zumba", "Strength Training"):
-            self._form_error("Please select a specialization.")
+        # # Required: specialization
+        # if specialization not in ("Weight Training", "Cardio Fitness", "Yoga", "CrossFit", "Zumba", "Strength Training"):
+        #     self._form_error("Please select a specialization.")
 
         if not self.is_float(defaultfee):
             self._form_error("Please enter Default Fee in numbers only.")
@@ -437,15 +471,20 @@ class TrainersFrame(ctk.CTkFrame):
         name           = self.name_var.get().strip()
         phone          = self.phone_var.get().strip()
         salary         = self.salary_var.get().strip()
-        specialization = self.specialization_var.get().strip()
         status         = self.status_var.get().strip()
         defaultfee     = self.default_fee_var.get().strip()
 
+        # Create a list of the names of all checked specializations
+        selected_specs = [spec for spec, var in self.specialization_var.items() if var.get()]
+        
+        # Convert list ["Yoga", "Zumba"] -> "Yoga, Zumba"
+        specs_string = ", ".join(selected_specs)
+
         if mode == 'add':
-            success = insert_trainer(name, phone, salary, specialization, status, defaultfee)
+            success = insert_trainer(name, phone, salary, specs_string, status, defaultfee)
         else:
             trainer_id = self.selected_row['trainer_id']
-            success = update_trainer(trainer_id, name, phone, salary, specialization, status, defaultfee)
+            success = update_trainer(trainer_id, name, phone, salary, specs_string, status, defaultfee)
         
         if success:   # Insertion Successful
             popup.destroy()

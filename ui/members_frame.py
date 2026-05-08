@@ -305,10 +305,10 @@ class MembersFrame(ctk.CTkFrame):
         popup.resizable(False, False) 
         
         # Create StringVars here — they live as long as popup lives
-        self.name_var     = ctk.StringVar()
-        self.phone_var    = ctk.StringVar()
-        self.email_var    = ctk.StringVar()
-        self.gender_var   = ctk.StringVar()
+        self.name_var      = ctk.StringVar()
+        self.phone_var     = ctk.StringVar()
+        self.email_var     = ctk.StringVar()
+        self.gender_var    = ctk.StringVar()
         self.join_date_var = ctk.StringVar()
         
         # Pass popup to field builder
@@ -332,27 +332,27 @@ class MembersFrame(ctk.CTkFrame):
         form_frame.grid(row=0, column=0, padx=FORM_UI['padx'], pady=FORM_UI['pady'])
 
         # Row 0 - Name
-        ctk.CTkLabel(form_frame, text="Name:").grid(row=0, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkEntry(form_frame, textvariable=self.name_var).grid(row=0, column=1, padx=10, pady=FORM_UI['row_pady'])
+        ctk.CTkLabel(form_frame, text="Name:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=0, column=0, padx=10, pady=(5,FORM_UI['row_pady']), sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.name_var).grid(row=0, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
         # Row 1 - Phone
-        ctk.CTkLabel(form_frame, text="Phone No:").grid(row=1, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkEntry(form_frame, textvariable=self.phone_var).grid(row=1, column=1, padx=10, pady=FORM_UI['row_pady'])
+        ctk.CTkLabel(form_frame, text="Phone No:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=1, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.phone_var).grid(row=1, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
         # Row 2 - Email
-        ctk.CTkLabel(form_frame, text="Email:").grid(row=2, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkEntry(form_frame, textvariable=self.email_var).grid(row=2, column=1, padx=10, pady=FORM_UI['row_pady'])
+        ctk.CTkLabel(form_frame, text="Email:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=2, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.email_var).grid(row=2, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
         # Row 3 - Gender (Dropdown)
-        ctk.CTkLabel(form_frame, text="Gender:").grid(row=3, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkOptionMenu(form_frame, variable=self.gender_var, values=["Select Gender", "Male", "Female", "Other"]).grid(row=3, column=1, padx=10, pady=FORM_UI['row_pady'])
+        ctk.CTkLabel(form_frame, text="Gender:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=3, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+        ctk.CTkOptionMenu(form_frame, variable=self.gender_var, values=["Select Gender", "Male", "Female", "Other"]).grid(row=3, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
         # Row 4 - Join Date
-        ctk.CTkLabel(form_frame, text="Join Date\n(DD-MM-YYYY)").grid(row=4, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkEntry(form_frame, textvariable=self.join_date_var).grid(row=4, column=1, padx=10, pady=FORM_UI['row_pady'])
+        ctk.CTkLabel(form_frame, text="Join Date\n(DD-MM-YYYY)", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=4, column=0, padx=10, pady=(FORM_UI['row_pady'],5), sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.join_date_var).grid(row=4, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
         # Row 5 - Error message
-        self.error_label = ctk.CTkLabel(form_frame, text="", text_color=FORM_UI['error_color'])
+        self.error_label = ctk.CTkLabel(form_frame, text="", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),  text_color=FORM_UI['error_color'])
         self.error_label.grid(row=5, column=0, columnspan=2)
 
         # Addinh traces to Each Variable. means calling a function whenever variable's value changes
@@ -367,10 +367,10 @@ class MembersFrame(ctk.CTkFrame):
         btn_frame.grid(row=1, column=0, pady=(0, FORM_UI['btn_pady_bottom']))
 
 
-        self.save_btn = ctk.CTkButton(btn_frame, text="Save", width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'],state='disabled', text_color=DATA_FRAME_UI['btn_text'], command= lambda: self._on_save(popup,mode))
+        self.save_btn = ctk.CTkButton(btn_frame, text="Save", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']), width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'],state='disabled', text_color=DATA_FRAME_UI['btn_text'], command= lambda: self._on_save(popup,mode))
         self.save_btn.pack(side="left", padx=FORM_UI['btn_padx'])
 
-        self.cancel_btn = ctk.CTkButton(btn_frame, text="Cancel", width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'], text_color=DATA_FRAME_UI['btn_text'], command= popup.destroy)
+        self.cancel_btn = ctk.CTkButton(btn_frame, text="Cancel", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']), width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'], text_color=DATA_FRAME_UI['btn_text'], command= popup.destroy)
         self.cancel_btn.pack(side="left", padx=FORM_UI['btn_padx'])
 
     def _validate(self, *args):

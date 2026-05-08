@@ -301,9 +301,9 @@ class PlansFrame(ctk.CTkFrame):
         popup.resizable(False, False) 
         
         # Create StringVars here — they live as long as popup lives
-        self.name_var     = ctk.StringVar()
-        self.days_var    = ctk.StringVar()
-        self.fee_var    = ctk.StringVar()
+        self.name_var = ctk.StringVar()
+        self.days_var = ctk.StringVar()
+        self.fee_var  = ctk.StringVar()
 
         
         # Pass popup to field builder
@@ -322,19 +322,19 @@ class PlansFrame(ctk.CTkFrame):
 
     def _build_form_fields(self, popup):
         form_frame = ctk.CTkFrame(popup)
-        form_frame.grid(row=0, column=0, padx=FORM_UI['padx'], pady=FORM_UI['pady'])
+        form_frame.grid(row=0, column=0, padx=FORM_UI['padx'], pady=FORM_UI['pady'], sticky= 'nsew')
 
         # Row 0 - Name
-        ctk.CTkLabel(form_frame, text="Name:").grid(row=0, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkEntry(form_frame, textvariable=self.name_var).grid(row=0, column=1, padx=10, pady=FORM_UI['row_pady'])
+        ctk.CTkLabel(form_frame, text="Name:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=0, column=0, padx=10, pady=(5,FORM_UI['row_pady']), sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.name_var).grid(row=0, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
         # Row 1 - days
-        ctk.CTkLabel(form_frame, text="Duration (days):").grid(row=1, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkEntry(form_frame, textvariable=self.days_var).grid(row=1, column=1, padx=10, pady=FORM_UI['row_pady'])
+        ctk.CTkLabel(form_frame, text="Duration (days):", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=1, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.days_var).grid(row=1, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
         # Row 2 - fee
-        ctk.CTkLabel(form_frame, text="Fee:").grid(row=2, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkEntry(form_frame, textvariable=self.fee_var).grid(row=2, column=1, padx=10, pady=FORM_UI['row_pady'])
+        ctk.CTkLabel(form_frame, text="Fee:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=2, column=0, padx=10, pady=(FORM_UI['row_pady'],5), sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.fee_var).grid(row=2, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
         # Row 3 - Error message
         self.error_label = ctk.CTkLabel(form_frame, text="", text_color=FORM_UI['error_color'])
@@ -350,16 +350,16 @@ class PlansFrame(ctk.CTkFrame):
         btn_frame.grid(row=1, column=0, pady=(0, FORM_UI['btn_pady_bottom']))
 
 
-        self.save_btn = ctk.CTkButton(btn_frame, text="Save", width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'],state='disabled', text_color=DATA_FRAME_UI['btn_text'], command= lambda: self._on_save(popup,mode))
+        self.save_btn = ctk.CTkButton(btn_frame, text="Save", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']), width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'],state='disabled', text_color=DATA_FRAME_UI['btn_text'], command= lambda: self._on_save(popup,mode))
         self.save_btn.pack(side="left", padx=FORM_UI['btn_padx'])
 
-        self.cancel_btn = ctk.CTkButton(btn_frame, text="Cancel", width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'], text_color=DATA_FRAME_UI['btn_text'], command= popup.destroy)
+        self.cancel_btn = ctk.CTkButton(btn_frame, text="Cancel", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']), width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'], text_color=DATA_FRAME_UI['btn_text'], command= popup.destroy)
         self.cancel_btn.pack(side="left", padx=FORM_UI['btn_padx'])
 
     def _validate(self, *args):
-        name      = self.name_var.get().strip()
-        days     = self.days_var.get().strip()
-        fee     = self.fee_var.get().strip()
+        name = self.name_var.get().strip()
+        days = self.days_var.get().strip()
+        fee  = self.fee_var.get().strip()
 
         # Required: Name
         if not name:
@@ -394,11 +394,9 @@ class PlansFrame(ctk.CTkFrame):
 
 
     def _on_save(self, popup, mode):
-        from datetime import datetime
-
-        name      = self.name_var.get().strip()
-        days     = self.days_var.get().strip()
-        fee     = self.fee_var.get().strip()
+        name = self.name_var.get().strip()
+        days = self.days_var.get().strip()
+        fee  = self.fee_var.get().strip()
 
         if mode == 'add':
             success = insert_plan(name, days, fee)

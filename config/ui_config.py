@@ -33,7 +33,8 @@ GLOBAL_UI = {
     "theme_color":     "blue",
     "window_size":     "1100x600",
     "min_window_size": (900, 550),
-    "font_family":     "Helvetica",
+    "font_family":     "Georgia",
+    "Data_font":       "Georgia"
 }
 
 # ── Login Frame ────────────────────────────────────────────────────────────────
@@ -47,6 +48,8 @@ LOGIN_UI = {
     "entry_height":       40,
 
     # Font
+    "font_family":    GLOBAL_UI["font_family"],
+    "data_font":      GLOBAL_UI["Data_font"],
     "title_font_size":    22,
     "subtitle_font_size": 13,
     "button_font_size":   14,
@@ -114,10 +117,11 @@ DATA_FRAME_UI = {
 
     # Font
     "btn_font_family":    GLOBAL_UI["font_family"],
+    "data_font":          GLOBAL_UI["Data_font"],
     "btn_font_size":      13,
 
     # ── Style: Standard (Search, Add, Export, Save, Cancel) ───────────────────
-    "btn_fg":             "transparent",
+    "btn_fg":             "#FFFFFF",
     "btn_border":         1,
     "btn_hover":          APP_THEME["primary_color_hover"],
     "btn_text":           APP_THEME["primary_color"],
@@ -143,16 +147,18 @@ DATA_FRAME_UI = {
 # ── Popup Form UI — Used by every frame's popup ────────────────────────────────
 FORM_UI = {
     # Layout
+    "data_font":      GLOBAL_UI["Data_font"],
     "width":            400,
     "height":           420,
     "padx":             10,
     "pady":             10,
     "frame_padx":       20,
     "frame_pady":       20,
-    "row_pady":         10,
+    "row_pady":         2.5,
     "label_padx":       10,
     "entry_padx":       10,
     "label_sticky":     "e",
+    "entry_sticky":     "w",
     "btn_width":        100,
     "btn_padx":         10,
     "btn_pady_bottom":  20,
