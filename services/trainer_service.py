@@ -87,25 +87,4 @@ def update_trainer(trainer_id, name, phone_no, salary, specialization, status, d
         return False
     finally:
         conn.close()
-
-def delete_trainer(trainer_id: int):
-    conn = get_db_connection()
-    try:
-        set_session_var(conn)
-        cursor = conn.cursor()
-        query = """
-            DELETE FROM trainer
-            WHERE trainer_id=%s
-        """
-
-        cursor.execute(query,(trainer_id,))
-
-        # If everything is perfect, save it
-        conn.commit()
-        return True
-    except Exception as e:
-        conn.rollback() 
-        print(f"Error: {e}")
-        return False
-    finally:
-        conn.close()
+        
