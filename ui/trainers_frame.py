@@ -196,9 +196,10 @@ class TrainersFrame(ctk.CTkFrame):
         # inserts New Data
         for row in rows:
             tag = row['status']
+            formatted_id = f'TRN-{row['trainer_id']}'
         
             self.table.insert(parent='', index= 'end', values=(
-                row['trainer_id'],
+                formatted_id,
                 row['name'],
                 row['phone_no'] or '',  # if there is a NULL value Tree will show None so replace it with ""
                 row['salary'],
@@ -214,11 +215,14 @@ class TrainersFrame(ctk.CTkFrame):
 
     def _on_search(self,  *args):
         search_term = self.searchbar_var.get().strip()
+        search_term = search_term.upper()
         # if there is no SearchTerm, Load Normal Data
         if not search_term:
             self.load_data()
         # Else search the Data and load it
         else:
+            if search_term.startswith("TRN-"):
+                search_term = search_term.replace("TRN-","")
             rows = search_trainer(search_term)
             self._refresh_table(rows)
 
