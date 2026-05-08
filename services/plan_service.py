@@ -43,16 +43,16 @@ def search_plan(searchterm):
     finally:
         conn.close()
 
-def insert_plan(plan_name, duration_days, fee):
+def insert_plan(plan_name, duration_days, status, fee):
     conn = get_db_connection()
     try:
         set_session_var(conn)
         cursor = conn.cursor()
         query = """
-            INSERT INTO membership_plan (plan_name, duration_days, fee)
-            VALUES (%s, %s, %s)
+            INSERT INTO membership_plan (plan_name, duration_days, status, fee)
+            VALUES (%s, %s, %s, %s)
         """
-        cursor.execute(query, (plan_name, duration_days, fee))
+        cursor.execute(query, (plan_name, duration_days, status, fee))
         
         # If everything is perfect, save it
         conn.commit()
@@ -64,39 +64,17 @@ def insert_plan(plan_name, duration_days, fee):
     finally:
         conn.close()
 
-def update_plan(plan_id, plan_name, duration_days, fee):
+def update_plan(plan_id, plan_name, duration_days, status, fee):
     conn = get_db_connection()
     try:
         set_session_var(conn)
         cursor = conn.cursor()
         query = """
             UPDATE membership_plan
-            SET plan_name=%s, duration_days=%s, fee=%s
+            SET plan_name=%s, duration_days=%s, status=%s, fee=%s
             WHERE plan_id=%s
         """
-        cursor.execute(query, (plan_name, duration_days, fee, plan_id))
-
-        # If everything is perfect, save it
-        conn.commit()
-        return True
-    except Exception as e:
-        conn.rollback() 
-        print(f"Error: {e}")
-        return False
-    finally:
-        conn.close()
-
-def delete_plan(plan_id: int):
-    conn = get_db_connection()
-    try:
-        set_session_var(conn)
-        cursor = conn.cursor()
-        query = """
-            DELETE FROM membership_plan
-            WHERE plan_id=%s
-        """
-
-        cursor.execute(query,(plan_id,))
+        cursor.execute(query, (plan_name, duration_days, status, fee, plan_id))
 
         # If everything is perfect, save it
         conn.commit()

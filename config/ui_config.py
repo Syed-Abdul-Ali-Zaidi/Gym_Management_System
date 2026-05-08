@@ -142,14 +142,30 @@ DATA_FRAME_UI = {
     # ── Table strips ──────────────────────────────────────────────────────────
     "even":               "#f5f5f5",
     "odd":                "#ffffff",
-}
+
+    # ── Trainer status row colors ─────────────────────────────
+    "trainer_active":      "#DCFCE7",   # soft green
+    "trainer_on_leave":    "#FEF3C7",   # soft yellow
+    "trainer_terminated":  "#FEE2E2",   # soft red
+
+    # ── Member status row colors ─────────────────────────────
+    "member_active":      "#DCFCE7",   # soft green
+    "member_inactive":    "#FEE2E2",   # soft red
+
+    # ── Plan status row colors ─────────────────────────────
+    "plan_active":      "#DCFCE7",   # soft green
+    "plan_discontinued":    "#FEE2E2",   # soft red
+
+    # ── User status row colors ─────────────────────────────
+    "user_active":      "#DCFCE7",   # soft green
+    "user_inactive":    "#FEE2E2",   # soft red
+
+    }
 
 # ── Popup Form UI — Used by every frame's popup ────────────────────────────────
 FORM_UI = {
     # Layout
     "data_font":      GLOBAL_UI["Data_font"],
-    "width":            400,
-    "height":           420,
     "padx":             10,
     "pady":             10,
     "frame_padx":       20,
@@ -164,13 +180,5 @@ FORM_UI = {
     "btn_pady_bottom":  20,
 
     # ── Error label ───────────────────────────────────────────────────────────
-    "error_color":      APP_THEME["danger_red"],
-
-    # ── Dropdown options ──────────────────────────────────────────────────────
-    "gender_options":       ["Select Gender", "Male", "Female", "Other"],
-    "status_options":       ["Active", "Expired", "Cancelled", "Upcoming"],
-    "trainer_status":       ["Active", "On-leave", "Terminated"],
-    "expense_categories":   ["Utility Bills", "Rent", "Marketing&Sales", "Maintenance&Supplies", "Extras"],
-    "payment_methods":      ["Cash", "Card", "Online"],
-    "user_roles":           ["Admin", "Receptionist"],
+    "error_color":      APP_THEME["danger_red"]
 }

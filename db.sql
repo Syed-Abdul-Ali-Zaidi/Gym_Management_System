@@ -4,12 +4,12 @@ USE gymdb;
 
 -- 1. MEMBER Table 
 CREATE TABLE `member` ( 
-  `member_id`  INTEGER      NOT NULL AUTO_INCREMENT, 
-  `name`       VARCHAR(50)  NOT NULL, 
-  `phone_no`   VARCHAR(20)  NULL, 
-  `email`      VARCHAR(50)  NULL, 
-  `gender`     VARCHAR(15)  CHECK (`gender` IN ('Male', 'Female', 'Other')), 
-  `join_date`  DATE         NOT NULL, 
+  `member_id` INTEGER      NOT NULL AUTO_INCREMENT, 
+  `name`      VARCHAR(50)  NOT NULL, 
+  `phone_no`  VARCHAR(20)  NULL,
+  `gender`    VARCHAR(15)  CHECK (`gender` IN ('Male', 'Female', 'Other')),
+  `status`    VARCHAR(20)   NOT NULL CHECK (`status` IN ('Active', 'Inactive')),
+  `join_date` DATE         NOT NULL, 
  
   PRIMARY KEY (`member_id`) 
 ); 
@@ -18,7 +18,8 @@ CREATE TABLE `member` (
 CREATE TABLE `membership_plan` ( 
   `plan_id`       INTEGER       NOT NULL AUTO_INCREMENT, 
   `plan_name`     VARCHAR(50)   NOT NULL UNIQUE, 
-  `duration_days` INTEGER       NOT NULL, 
+  `duration_days` INTEGER       NOT NULL,
+  `status`        VARCHAR(20)   NOT NULL CHECK (`status` IN ('Active', 'Discontinued')),
   `fee`           DECIMAL(10,2) NOT NULL, 
  
   PRIMARY KEY (`plan_id`) 
@@ -29,7 +30,7 @@ CREATE TABLE `trainer` (
   `trainer_id`     INTEGER       NOT NULL AUTO_INCREMENT, 
   `name`           VARCHAR(50)   NOT NULL, 
   `phone_no`       VARCHAR(20)   NULL, 
-  `salary`         DECIMAL(10,2) CHECK (`salary` >= 0) NOT NULL, 
+  `salary`         DECIMAL(10,2) NOT NULL CHECK (`salary` >= 0), 
   `specialization` VARCHAR(50)   NULL, 
   `status`         VARCHAR(20)   NOT NULL CHECK (`status` IN ('Active', 'On-leave', 'Terminated')), 
   `default_fee`    DECIMAL(10,2) NULL, 
@@ -39,11 +40,12 @@ CREATE TABLE `trainer` (
  
 -- 4. USER Table 
 CREATE TABLE `user` ( 
-  `user_id`    INTEGER      NOT NULL AUTO_INCREMENT, 
-  `username`   VARCHAR(45)  NOT NULL, 
-  `password`   VARCHAR(45)  NOT NULL CHECK (LENGTH(`password`) >= 8), 
-  `role`       VARCHAR(25)  NOT NULL CHECK (`role` IN ('Admin', 'Receptionist')), 
-  `created_at` DATETIME     NOT NULL DEFAULT CURRENT_TIMESTAMP, 
+  `user_id`      INTEGER      NOT NULL AUTO_INCREMENT, 
+  `username`     VARCHAR(45)  NOT NULL, 
+  `password`     VARCHAR(45)  NOT NULL CHECK (LENGTH(`password`) >= 8), 
+  `role`         VARCHAR(25)  NOT NULL CHECK (`role` IN ('Admin', 'Receptionist')),
+  `status`       VARCHAR(20)  NOT NULL CHECK (`status` IN ('Active', 'Inactive')),
+  `date_created` DATE         NOT NULL, 
  
   PRIMARY KEY (`user_id`) 
 ); 
@@ -131,8 +133,8 @@ CREATE TABLE `audit_log` (
 
 -- INSERTING A DEFAULT USER BECAUSE EVERY ACTION NEEDS A USER_ID IN AUDIT_LOG
 use gymdb;
-INSERT INTO user(username, password, role, created_at)
-VALUES('ALI','1234-345','Admin', sysdate());
+INSERT INTO user(username, password, role, status, date_created)
+VALUES('ALI','1234-345','Admin', 'Active', sysdate());
 
 
 -- There will be 2 views but for now there is only 1.

@@ -1,16 +1,9 @@
-# import customtkinter as ctk
-
-# class PlansFrame(ctk.CTkFrame):
-#     def __init__(self, content_area):
-#         super().__init__(content_area, fg_color="transparent")
-
-
 import customtkinter as ctk
 from tkinter import ttk, messagebox
 from config.ui_config import DATA_FRAME_UI, FORM_UI
 from services.plan_service import (
     get_all_plan, search_plan,
-    insert_plan, update_plan, delete_plan
+    insert_plan, update_plan
 )
 from ui.excel_file_maker import export_to_excel
 
@@ -125,16 +118,18 @@ class PlansFrame(ctk.CTkFrame):
         style.configure("Treeview", font=("Arial", 14), rowheight=35)
 
         # ── Table Section ───────────────────────────────────────────
-        self.table = ttk.Treeview(self.table_frame, columns= ('plan_id', 'plan_name', 'duration_days', 'fee'), show= 'headings', selectmode="browse")
+        self.table = ttk.Treeview(self.table_frame, columns= ('plan_id', 'plan_name', 'duration_days', 'status', 'fee'), show= 'headings', selectmode="browse")
         self.table.heading('plan_id',       text= 'Plan ID')
         self.table.heading('plan_name',     text= 'Plan Name')
         self.table.heading('duration_days', text= 'Duration Days')
+        self.table.heading('status',        text= 'Status')
         self.table.heading('fee',           text= 'Fee')
 
         # Column widths
         self.table.column('plan_id',       width=150, minwidth=150, anchor='center')
         self.table.column('plan_name',     width=250, minwidth=250)
         self.table.column('duration_days', width=100, minwidth=100, anchor='center')
+        self.table.column('status',        width=200, minwidth=200)
         self.table.column('fee',           width=150, minwidth=150, anchor='center')
 
         self.table.bind('<<TreeviewSelect>>', self._on_row_select)
@@ -158,22 +153,6 @@ class PlansFrame(ctk.CTkFrame):
         self.selection_label = ctk.CTkLabel(self.action_bar, text='No Row Selected')
         self.selection_label.grid(row=0, column=0, sticky="w", padx=10, pady=8)
 
-        # Delete button — red tint, disabled by default
-        self.delete_btn = ctk.CTkButton(
-            self.action_bar,
-            text='🗑 Delete',
-            width=DATA_FRAME_UI['actionbar_btn_width'],
-            height=DATA_FRAME_UI['btn_height'],
-            state="disabled",
-            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
-            fg_color=DATA_FRAME_UI['delete_fg'],
-            hover_color=DATA_FRAME_UI['delete_hover'],
-            text_color=DATA_FRAME_UI['delete_text'],
-            border_width=DATA_FRAME_UI['btn_border'],
-            command=self._on_delete
-        )
-        self.delete_btn.grid(row=0, column=2, padx=(4, 8), pady=8)
-
         # Edit button — disabled by default
         self.edit_btn = ctk.CTkButton(
             self.action_bar,
@@ -188,7 +167,7 @@ class PlansFrame(ctk.CTkFrame):
             border_width=DATA_FRAME_UI['btn_border'],
             command=self._on_edit
         )
-        self.edit_btn.grid(row=0, column=1, padx=4, pady=8)
+        self.edit_btn.grid(row=0, column=2, padx=(4, 8), pady=8)
 
     def load_data(self):
         rows = get_all_plan()
@@ -198,27 +177,25 @@ class PlansFrame(ctk.CTkFrame):
         # Deletes existing rows
         self.table.delete(*self.table.get_children())
 
-        # Creating Stripped row tags
-        self.table.tag_configure('oddrow', background=DATA_FRAME_UI['odd'])
-        self.table.tag_configure('evenrow', background=DATA_FRAME_UI['even'])
-        
-        count = 0
-        keys = ['evenrow', 'oddrow']
+       # Creating Stripped row tags
+        self.table.tag_configure('Active', background=DATA_FRAME_UI['plan_active'])
+        self.table.tag_configure('Discontinued', background=DATA_FRAME_UI['plan_discontinued'])
 
         # inserts New Data
         for row in rows:
-            tag = keys[count % 2]
+            tag = row['status']
+
             formatted_id = f'PLN-{row['plan_id']}'
 
             self.table.insert(parent='', index= 'end', values=(
                 formatted_id,
                 row['plan_name'],
                 row['duration_days'],
+                row['status'],
                 row['fee']),
                 tags= (tag,)
             )
 
-            count += 1
 
 
 
@@ -240,10 +217,9 @@ class PlansFrame(ctk.CTkFrame):
         self.selected_row = None
         self.selection_label.configure(text='No row selected')
         self.edit_btn.configure(state='disabled')
-        self.delete_btn.configure(state='disabled')
 
     def _on_row_select(self, event):
-        column_names = ['plan_id', 'plan_name', 'duration_days', 'fee']
+        column_names = ['plan_id', 'plan_name', 'duration_days', 'status', 'fee']
         selected = self.table.selection()
 
         if not selected:
@@ -257,37 +233,8 @@ class PlansFrame(ctk.CTkFrame):
         # Updating the Selection Label
         self.selection_label.configure(text= f'ID: {self.selected_row['plan_id']} | Name: {self.selected_row['plan_name']}')
 
-        # Enabling the Edit and Delete bottons
-        self.delete_btn.configure(state='normal')
+        # Enabling the Edit botton
         self.edit_btn.configure(state='normal')
-
-
-            
-
-    def _on_delete(self):
-        if self.selected_row is None:
-            return
-        
-        # First ask for confirmation on Delete
-        confirmed = messagebox.askyesno(title="Confirm", message="Delete this planget_all_plan?")
-        if confirmed:
-            item_id = self.selected_row['plan_id']
-            success = delete_plan(item_id)
-
-            if success:   # deletion Successful
-                self.load_data()
-                # reseting selected row
-                self.selected_row = None
-
-                self.selection_label.configure(text='No Row Selected')
-                self.delete_btn.configure(state= 'disabled')
-                self.edit_btn.configure(state= 'disabled')
-            else:
-                messagebox.showerror(title="Error",
-                                     message="Could not delete plan.\nThey may have an active planget_all_planship."
-                                    )
-
-
 
 
     def _on_add(self):
@@ -302,13 +249,14 @@ class PlansFrame(ctk.CTkFrame):
     def _open_form(self, mode):
         popup = ctk.CTkToplevel(self)
         popup.title("Add Plan" if mode == "add" else "Edit Plan")
-        popup.geometry('400x280')
+        popup.geometry('300x223')
         popup.resizable(False, False) 
         
         # Create StringVars here — they live as long as popup lives
-        self.name_var = ctk.StringVar()
-        self.days_var = ctk.StringVar()
-        self.fee_var  = ctk.StringVar()
+        self.name_var   = ctk.StringVar()
+        self.days_var   = ctk.StringVar()
+        self.status_var = ctk.StringVar()
+        self.fee_var    = ctk.StringVar()
 
         
         # Pass popup to field builder
@@ -318,6 +266,7 @@ class PlansFrame(ctk.CTkFrame):
         if mode == 'edit':
             self.name_var.set(self.selected_row['plan_name'])
             self.days_var.set(self.selected_row['duration_days'])
+            self.status_var.set(self.selected_row['status'])
             self.fee_var.set(self.selected_row['fee'])
         
         popup.grab_set()    # User CANNOT click anything in the main window until popup closes
@@ -337,17 +286,22 @@ class PlansFrame(ctk.CTkFrame):
         ctk.CTkLabel(form_frame, text="Duration (days):", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=1, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
         ctk.CTkEntry(form_frame, textvariable=self.days_var).grid(row=1, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
-        # Row 2 - fee
-        ctk.CTkLabel(form_frame, text="Fee:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=2, column=0, padx=10, pady=(FORM_UI['row_pady'],5), sticky=FORM_UI["label_sticky"])
-        ctk.CTkEntry(form_frame, textvariable=self.fee_var).grid(row=2, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
+        # Row 2 - Status (Dropdown)
+        ctk.CTkLabel(form_frame, text="Status:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=2, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+        ctk.CTkOptionMenu(form_frame, variable=self.status_var, values=["Select Status", "Active", "Discontinued"], fg_color= DATA_FRAME_UI['btn_fg'], dropdown_hover_color= DATA_FRAME_UI['btn_hover']).grid(row=2, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
-        # Row 3 - Error message
+        # Row 3 - fee
+        ctk.CTkLabel(form_frame, text="Fee:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=3, column=0, padx=10, pady=(FORM_UI['row_pady'],5), sticky=FORM_UI["label_sticky"])
+        ctk.CTkEntry(form_frame, textvariable=self.fee_var).grid(row=3, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
+
+        # Row 4 - Error message
         self.error_label = ctk.CTkLabel(form_frame, text="", text_color=FORM_UI['error_color'])
-        self.error_label.grid(row=5, column=0, columnspan=2)
+        self.error_label.grid(row=4, column=0, columnspan=2)
 
         # Adding traces to Each Variable. means calling a function whenever variable's value changes
         self.name_var.trace_add("write", self._validate)
         self.days_var.trace_add("write", self._validate)
+        self.status_var.trace_add("write", self._validate)
         self.fee_var.trace_add("write", self._validate)
 
     def _build_form_buttons(self, popup, mode):
@@ -362,9 +316,10 @@ class PlansFrame(ctk.CTkFrame):
         self.cancel_btn.pack(side="left", padx=FORM_UI['btn_padx'])
 
     def _validate(self, *args):
-        name = self.name_var.get().strip()
-        days = self.days_var.get().strip()
-        fee  = self.fee_var.get().strip()
+        name   = self.name_var.get().strip()
+        days   = self.days_var.get().strip()
+        status = self.status_var.get().strip()
+        fee    = self.fee_var.get().strip()
 
         # Required: Name
         if not name:
@@ -377,6 +332,11 @@ class PlansFrame(ctk.CTkFrame):
         # Required: days
         if not days.isdigit():
             self._form_error("⚠ Please enter Dauration in numbers only.")
+            return
+        
+         # Required: status
+        if status not in ('Active', 'Discontinued'):
+            self._form_error("⚠ Please select a status.")
             return
 
         # Required: fees
@@ -399,15 +359,18 @@ class PlansFrame(ctk.CTkFrame):
 
 
     def _on_save(self, popup, mode):
-        name = self.name_var.get().strip()
-        days = self.days_var.get().strip()
-        fee  = self.fee_var.get().strip()
+        name   = self.name_var.get().strip()
+        days   = self.days_var.get().strip()
+        status = self.status_var.get().strip()
+        fee    = self.fee_var.get().strip()
+
 
         if mode == 'add':
-            success = insert_plan(name, days, fee)
+            success = insert_plan(name, days, status, fee)
         else:
             plan_id = self.selected_row['plan_id']
-            success = update_plan(plan_id, name, days, fee)
+            formatted_id = plan_id.replace("PLN-","")          
+            success = update_plan(formatted_id, name, days, status, fee)
         
         if success:   # Insertion Successful
             popup.destroy()
@@ -416,7 +379,6 @@ class PlansFrame(ctk.CTkFrame):
 
             self.load_data()   
             self.selection_label.configure(text='No Row Selected')
-            self.delete_btn.configure(state= 'disabled')
             self.edit_btn.configure(state= 'disabled')
         else:
             messagebox.showerror(title="Error",
@@ -436,7 +398,7 @@ class PlansFrame(ctk.CTkFrame):
             messagebox.showwarning(title="Empty", message="No data to export.")
             return
         
-        export_to_excel(tree=self.table, default_filename="planget_all_planship_plans_export")
+        export_to_excel(tree=self.table, default_filename="Membership_ship_plans_export")
         
 
 

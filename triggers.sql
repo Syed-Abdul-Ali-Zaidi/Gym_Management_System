@@ -6,7 +6,7 @@
 DELIMITER //
 
 -- ============================================================
--- 1. MEMBER  (member_id|name|phone_no|email|gender|join_date)
+-- 1. MEMBER  (member_id|name|phone_no|gender|status|join_date)
 -- ============================================================
 
 CREATE TRIGGER member_insert
@@ -14,7 +14,7 @@ AFTER INSERT ON member FOR EACH ROW
 BEGIN
     INSERT INTO audit_log (user_id, timestamp, action, table_name, old_value, new_value)
     VALUES (@current_user_id, CURRENT_TIMESTAMP, 'Insert', 'member', NULL,
-        CONCAT('member_id:', NEW.member_id, '|name:', NEW.name, '|phone_no:', COALESCE(NEW.phone_no,''), '|email:', COALESCE(NEW.email,''), '|gender:', NEW.gender, '|join_date:', NEW.join_date));
+        CONCAT('member_id:', NEW.member_id, '|name:', NEW.name, '|phone_no:', COALESCE(NEW.phone_no,''), '|gender:', NEW.gender, '|status:', COALESCE(NEW.status,''), '|join_date:', NEW.join_date));
 END //
 
 CREATE TRIGGER member_update
@@ -38,14 +38,14 @@ BEGIN
         SET new_changes = CONCAT(new_changes, '|phone_no:', NEW.phone_no);
     END IF;
 
-    IF COALESCE(OLD.email,'') != COALESCE(NEW.email,'') THEN
-        SET old_changes = CONCAT(old_changes, '|email:', OLD.email);
-        SET new_changes = CONCAT(new_changes, '|email:', NEW.email);
-    END IF;
-
     IF COALESCE(OLD.gender,'') != COALESCE(NEW.gender,'') THEN
         SET old_changes = CONCAT(old_changes, '|gender:', OLD.gender);
         SET new_changes = CONCAT(new_changes, '|gender:', NEW.gender);
+    END IF;
+
+    IF COALESCE(OLD.status,'') != COALESCE(NEW.status,'') THEN
+        SET old_changes = CONCAT(old_changes, '|status:', OLD.status);
+        SET new_changes = CONCAT(new_changes, '|status:', NEW.status);
     END IF;
 
     IF COALESCE(OLD.join_date,'') != COALESCE(NEW.join_date,'') THEN
@@ -60,15 +60,6 @@ BEGIN
     END IF;
 END //
 
-CREATE TRIGGER member_delete
-AFTER DELETE ON member FOR EACH ROW
-BEGIN
-    INSERT INTO audit_log (user_id, timestamp, action, table_name, old_value, new_value)
-    VALUES (@current_user_id, CURRENT_TIMESTAMP, 'Delete', 'member',
-        CONCAT('member_id:', OLD.member_id, '|name:', OLD.name, '|phone_no:', COALESCE(OLD.phone_no,''), '|email:', COALESCE(OLD.email,''), '|gender:', OLD.gender, '|join_date:', OLD.join_date),
-        NULL);
-END //
-
 
 -- ============================================================
 -- 2. MEMBERSHIP_PLAN  (plan_id|plan_name|duration_days|fee)
@@ -79,7 +70,7 @@ AFTER INSERT ON membership_plan FOR EACH ROW
 BEGIN
     INSERT INTO audit_log (user_id, timestamp, action, table_name, old_value, new_value)
     VALUES (@current_user_id, CURRENT_TIMESTAMP, 'Insert', 'membership_plan', NULL,
-        CONCAT('plan_id:', NEW.plan_id, '|plan_name:', NEW.plan_name, '|duration_days:', NEW.duration_days, '|fee:', NEW.fee));
+        CONCAT('plan_id:', NEW.plan_id, '|plan_name:', NEW.plan_name, '|duration_days:', NEW.duration_days, '|status:', NEW.status, '|fee:', NEW.fee));
 END //
 
 CREATE TRIGGER plan_update
@@ -103,6 +94,11 @@ BEGIN
         SET new_changes = CONCAT(new_changes, '|duration_days:', NEW.duration_days);
     END IF;
 
+    IF COALESCE(OLD.status,'') != COALESCE(NEW.status,'') THEN
+        SET old_changes = CONCAT(old_changes, '|status:', OLD.status);
+        SET new_changes = CONCAT(new_changes, '|status:', NEW.status);
+    END IF;
+
     IF COALESCE(OLD.fee,'') != COALESCE(NEW.fee,'') THEN
         SET old_changes = CONCAT(old_changes, '|fee:', OLD.fee);
         SET new_changes = CONCAT(new_changes, '|fee:', NEW.fee);
@@ -113,15 +109,6 @@ BEGIN
         INSERT INTO audit_log (user_id, timestamp, action, table_name, old_value, new_value)
         VALUES (@current_user_id, CURRENT_TIMESTAMP, 'Update', 'membership_plan', old_changes, new_changes);
     END IF;
-END //
-
-CREATE TRIGGER plan_delete
-AFTER DELETE ON membership_plan FOR EACH ROW
-BEGIN
-    INSERT INTO audit_log (user_id, timestamp, action, table_name, old_value, new_value)
-    VALUES (@current_user_id, CURRENT_TIMESTAMP, 'Delete', 'membership_plan',
-        CONCAT('plan_id:', OLD.plan_id, '|plan_name:', OLD.plan_name, '|duration_days:', OLD.duration_days, '|fee:', OLD.fee),
-        NULL);
 END //
 
 
@@ -185,18 +172,9 @@ BEGIN
     END IF;
 END //
 
-CREATE TRIGGER trainer_delete
-AFTER DELETE ON trainer FOR EACH ROW
-BEGIN
-    INSERT INTO audit_log (user_id, timestamp, action, table_name, old_value, new_value)
-    VALUES (@current_user_id, CURRENT_TIMESTAMP, 'Delete', 'trainer',
-        CONCAT('trainer_id:', OLD.trainer_id, '|name:', OLD.name, '|phone_no:', COALESCE(OLD.phone_no,''), '|salary:', OLD.salary, '|specialization:', COALESCE(OLD.specialization,''), '|status:', OLD.status, '|default_fee:', COALESCE(OLD.default_fee,'')),
-        NULL);
-END //
-
 
 -- ============================================================
--- 4. USER  (user_id|username|role)  — NO PASSWORD
+-- 4. USER  (user_id|username|status|role)  — NO PASSWORD
 -- ============================================================
 
 CREATE TRIGGER user_insert
@@ -204,7 +182,7 @@ AFTER INSERT ON user FOR EACH ROW
 BEGIN
     INSERT INTO audit_log (user_id, timestamp, action, table_name, old_value, new_value)
     VALUES (@current_user_id, CURRENT_TIMESTAMP, 'Insert', 'user', NULL,
-        CONCAT('user_id:', NEW.user_id, '|username:', NEW.username, '|role:', NEW.role));
+        CONCAT('user_id:', NEW.user_id, '|username:', NEW.username, '|status:', NEW.status, '|role:', NEW.role));
 END //
 
 CREATE TRIGGER user_update
@@ -223,6 +201,11 @@ BEGIN
         SET new_changes = CONCAT(new_changes, '|username:', NEW.username);
     END IF;
 
+    IF COALESCE(OLD.status,'') != COALESCE(NEW.status,'') THEN
+        SET old_changes = CONCAT(old_changes, '|status:', OLD.status);
+        SET new_changes = CONCAT(new_changes, '|status:', NEW.status);
+    END IF;
+
     IF COALESCE(OLD.role,'') != COALESCE(NEW.role,'') THEN
         SET old_changes = CONCAT(old_changes, '|role:', OLD.role);
         SET new_changes = CONCAT(new_changes, '|role:', NEW.role);
@@ -233,15 +216,6 @@ BEGIN
     INSERT INTO audit_log (user_id, timestamp, action, table_name, old_value, new_value)
     VALUES (@current_user_id, CURRENT_TIMESTAMP, 'Update', 'user', old_changes, new_changes);
     END IF;
-END //
-
-CREATE TRIGGER user_delete
-AFTER DELETE ON user FOR EACH ROW
-BEGIN
-    INSERT INTO audit_log (user_id, timestamp, action, table_name, old_value, new_value)
-    VALUES (@current_user_id, CURRENT_TIMESTAMP, 'Delete', 'user',
-        CONCAT('user_id:', OLD.user_id, '|username:', OLD.username, '|role:', OLD.role),
-        NULL);
 END //
 
 
