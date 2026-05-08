@@ -7,6 +7,7 @@ def get_all_trainer():
         cursor = conn.cursor(dictionary=True)
         query = """
             SELECT * FROM trainer
+            ORDER BY status
         """
         cursor.execute(query)
         rows = cursor.fetchall() 
@@ -26,6 +27,7 @@ def search_trainer(searchterm):
         query = """
             SELECT * FROM trainer
             WHERE trainer_id=%s OR name LIKE %s
+            ORDER BY status
         """
 
         name_term = f'%{searchterm}%'
