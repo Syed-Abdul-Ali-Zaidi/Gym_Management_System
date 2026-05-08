@@ -29,7 +29,7 @@ CREATE TABLE `trainer` (
   `trainer_id`     INTEGER       NOT NULL AUTO_INCREMENT, 
   `name`           VARCHAR(50)   NOT NULL, 
   `phone_no`       VARCHAR(20)   NULL, 
-  `salary`         DECIMAL(10,2) CHECK (`salary` >= 0), 
+  `salary`         DECIMAL(10,2) CHECK (`salary` >= 0) NOT NULL, 
   `specialization` VARCHAR(50)   NULL, 
   `status`         VARCHAR(20)   NOT NULL CHECK (`status` IN ('Active', 'On-leave', 'Terminated')), 
   `default_fee`    DECIMAL(10,2) NULL, 
