@@ -18,14 +18,20 @@ def get_all_user():
     finally:
         conn.close()
 
-def search_user(searchterm):
+def search_user(searchterm, active_filters):
     '''This will search user(s) by thier username or ID'''
     conn = get_db_connection()
     try:
+        if not active_filters:
+            return []
+
+        placeholders = ", ".join(["%s"] * len(active_filters))
+
         cursor = conn.cursor(dictionary=True)
-        query = """
+        query = f"""
             SELECT * FROM user
-            WHERE user_id=%s OR username LIKE %s
+            WHERE status IN ({placeholders})  AND (user_id=%s OR username LIKE %s)
+            ORDER BY status
         """
 
         # Prepare the username term (e.g., "Ali" finds "Ali Ahmed")
@@ -36,7 +42,7 @@ def search_user(searchterm):
         else:
             id_val = 0
         
-        cursor.execute(query,(id_val,username_term))
+        cursor.execute(query,tuple(active_filters) + (id_val, username_term))
         rows = cursor.fetchall() 
         return rows
     except Exception as e:

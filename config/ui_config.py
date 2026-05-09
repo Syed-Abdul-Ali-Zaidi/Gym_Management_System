@@ -153,12 +153,18 @@ DATA_FRAME_UI = {
     "member_inactive":    "#FEE2E2",   # soft red
 
     # ── Plan status row colors ─────────────────────────────
-    "plan_active":      "#DCFCE7",   # soft green
-    "plan_discontinued":    "#FEE2E2",   # soft red
+    "plan_active":           "#DCFCE7",   # soft green
+    "plan_discontinued":  "#FEE2E2",   # soft red
 
     # ── User status row colors ─────────────────────────────
     "user_active":      "#DCFCE7",   # soft green
     "user_inactive":    "#FEE2E2",   # soft red
+
+    # ── AuditLog status row colors ─────────────────────────────
+    "audit_insert":      "#DCFCE7",   # soft green
+    "audit_update":      "#FEF3C7",   # soft yellow
+    "audit_delete":      "#FEE2E2",   # soft red
+
 
     }
 

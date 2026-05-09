@@ -36,12 +36,11 @@ class MembersFrame(ctk.CTkFrame):
         self.topbar_frame.grid_rowconfigure(0, weight=0)
         self.topbar_frame.grid_rowconfigure(1, weight=1)
         self.topbar_frame.grid_columnconfigure(0, weight=1)        # search entry stretches
-        self.topbar_frame.grid_columnconfigure(1, weight=0)        # buttons fixed
-        self.topbar_frame.grid_columnconfigure(2, weight=0)
-        self.topbar_frame.grid_columnconfigure(3, weight=0)
+        self.topbar_frame.grid_columnconfigure((1, 2, 3, 4), weight=0)        # buttons fixed
+
 
         # ── Search entry ───────────────────────────────────────────────
-        ctk.CTkLabel(self.topbar_frame, text="Search by MemberID or MemberName", font=ctk.CTkFont(size=10)).grid(row=0, column=0, padx=(6,4), pady=(1,0), sticky="w")
+        ctk.CTkLabel(self.topbar_frame, text="Search by MemberID or MemberName", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=0, column=0, padx=(6,4), pady=(1,0), sticky="w")
 
         # ── Search entry ───────────────────────────────────────────────
         self.searchbar_var = ctk.StringVar(value="")
@@ -72,6 +71,32 @@ class MembersFrame(ctk.CTkFrame):
         )
         self.search_btn.grid(row=1, column=1, padx=4, pady=(1,6))
 
+        # ── Status Filter Frame ──────────────────────────────────────────
+
+        # Create a small label above the checkboxes
+        ctk.CTkLabel(self.topbar_frame, text="Filter by Status:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=0, column=2, padx=4, pady=(1,0), sticky="w")
+
+        # Creating a Dict of Filters where each filter name is a BooleanVar()
+        filter_list = ["Active", "Inactive"]
+        self.filters_var = {}
+
+        for filter in filter_list:
+            self.filters_var[filter] = ctk.BooleanVar(value=True)
+        
+        filter_frame = ctk.CTkFrame(self.topbar_frame, fg_color="transparent")
+        filter_frame.grid(row=1, column=2, padx=2, pady=0, sticky="nsew")
+
+        # Automatically arrange checkboxes, 2 per col
+        for i, filter in enumerate(filter_list):
+            row_idx = i % 2    # Modulo division:  0, 1, 0, 1
+            col_idx = i // 2   # Integer division: 0, 0, 1, 1
+            
+            chk = ctk.CTkCheckBox(filter_frame, text=filter, font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size = 11), checkbox_height=15, checkbox_width=15, variable=self.filters_var[filter])
+            chk.grid(row=row_idx, column=col_idx, padx=1, sticky=FORM_UI["entry_sticky"])
+            
+            # Attach trace directly to the checkbox variable
+            self.filters_var[filter].trace_add("write", self._on_search)
+
         # ── Add button ─────────────────────────────────────────────────
         self.add_btn = ctk.CTkButton(
             self.topbar_frame,
@@ -85,7 +110,7 @@ class MembersFrame(ctk.CTkFrame):
             text_color=DATA_FRAME_UI['btn_text'],
             command=self._on_add
         )
-        self.add_btn.grid(row=1, column=2, padx=4, pady=(1,6))
+        self.add_btn.grid(row=1, column=3, padx=4, pady=(1,6))
 
         # ── Export button ──────────────────────────────────────────────
         self.export_btn = ctk.CTkButton(
@@ -100,7 +125,7 @@ class MembersFrame(ctk.CTkFrame):
             text_color=DATA_FRAME_UI['btn_text'],
             command=self._on_export
         )
-        self.export_btn.grid(row=1, column=3, padx=(4,6), pady=(1,6))
+        self.export_btn.grid(row=1, column=4, padx=(4,6), pady=(1,6))
 
 
     def _build_table(self):
@@ -211,14 +236,21 @@ class MembersFrame(ctk.CTkFrame):
     def _on_search(self,  *args):
         search_term = self.searchbar_var.get().strip()
         search_term = search_term.upper()
+
+        # Getting Ticked Filters
+        # Create a list of the names of all checked status
+        selected_filter = [filter for filter, var in self.filters_var.items() if var.get()]
+        
+
         # if there is no SearchTerm, Load Normal Data
         if not search_term:
-            self.load_data()
+            rows = search_member(search_term, selected_filter)
+            self._refresh_table(rows)
         # Else search the Data and load it
         else:
             if search_term.startswith("MEM-"):
                 search_term = search_term.replace("MEM-","")
-            rows = search_member(search_term)
+            rows = search_member(search_term, selected_filter)
             self._refresh_table(rows)
 
         # Clear selection after every search
@@ -267,6 +299,12 @@ class MembersFrame(ctk.CTkFrame):
         self.gender_var    = ctk.StringVar()
         self.status_var    = ctk.StringVar()
         self.join_date_var = ctk.StringVar()
+
+        # Filling the date with Current date
+        from datetime import datetime
+
+        current_date = datetime.now().strftime("%d-%m-%Y")
+        self.join_date_var.set(current_date)
         
         # Pass popup to field builder
         self._build_form_fields(popup)
@@ -280,7 +318,7 @@ class MembersFrame(ctk.CTkFrame):
             self.join_date_var.set(self.selected_row['join_date'])
 
             # Disabling the Date_Entry
-            self.date_entry.configure(state = 'disable')
+            self.date_entry.configure(state = 'disabled', text_color="#9E9E9E")
         
         popup.grab_set()    # User CANNOT click anything in the main window until popup closes
         popup.transient(self.winfo_toplevel())    # Popup won't go behind the main window
@@ -301,11 +339,11 @@ class MembersFrame(ctk.CTkFrame):
 
         # Row 2 - Gender (Dropdown)
         ctk.CTkLabel(form_frame, text="Gender:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=2, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkOptionMenu(form_frame, variable=self.gender_var, values=["Select Gender", "Male", "Female", "Other"], fg_color= DATA_FRAME_UI['btn_fg'], dropdown_hover_color= DATA_FRAME_UI['btn_hover']).grid(row=2, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
+        ctk.CTkOptionMenu(form_frame, variable=self.gender_var, values=["Select Gender", "Male", "Female", "Other"], text_color='black', fg_color= DATA_FRAME_UI['btn_fg'], dropdown_hover_color= DATA_FRAME_UI['btn_hover']).grid(row=2, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
         # Row 3 - Status (Dropdown)
         ctk.CTkLabel(form_frame, text="Status:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=3, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-        ctk.CTkOptionMenu(form_frame, variable=self.status_var, values=["Select Status", "Active", "Inactive"], fg_color= DATA_FRAME_UI['btn_fg'], dropdown_hover_color= DATA_FRAME_UI['btn_hover']).grid(row=3, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
+        ctk.CTkOptionMenu(form_frame, variable=self.status_var, values=["Select Status", "Active", "Inactive"], text_color='black', fg_color= DATA_FRAME_UI['btn_fg'], dropdown_hover_color= DATA_FRAME_UI['btn_hover']).grid(row=3, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
         # Row 4 - Join Date
         ctk.CTkLabel(form_frame, text="Join Date\n(DD-MM-YYYY)", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=4, column=0, padx=10, pady=(FORM_UI['row_pady'],5), sticky=FORM_UI["label_sticky"])

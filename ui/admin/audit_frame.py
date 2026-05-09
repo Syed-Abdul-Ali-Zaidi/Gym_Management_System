@@ -35,12 +35,10 @@ class AuditFrame(ctk.CTkFrame):
         self.topbar_frame.grid_rowconfigure(0, weight=0)
         self.topbar_frame.grid_rowconfigure(1, weight=1)
         self.topbar_frame.grid_columnconfigure(0, weight=1)        # search entry stretches
-        self.topbar_frame.grid_columnconfigure(1, weight=0)        # buttons fixed
-        self.topbar_frame.grid_columnconfigure(2, weight=0)
-        self.topbar_frame.grid_columnconfigure(3, weight=0)
+        self.topbar_frame.grid_columnconfigure((1, 2, 3, 4), weight=0)        # buttons fixed
 
         # ── Search entry ───────────────────────────────────────────────
-        ctk.CTkLabel(self.topbar_frame, text="Search by UserID or Username or Action or TableName", font=ctk.CTkFont(size=10)).grid(row=0, column=0, padx=(6,4), pady=(1,0), sticky="w")
+        ctk.CTkLabel(self.topbar_frame, text="Search by UserID or Username or TableName", font=ctk.CTkFont(size=10)).grid(row=0, column=0, padx=(6,4), pady=(1,0), sticky="w")
 
         # ── Search entry ───────────────────────────────────────────────
         self.searchbar_var = ctk.StringVar(value="")
@@ -71,20 +69,91 @@ class AuditFrame(ctk.CTkFrame):
         )
         self.search_btn.grid(row=1, column=1, padx=4, pady=(1,6))
 
-        # ── Add button ─────────────────────────────────────────────────
-        self.add_btn = ctk.CTkButton(
-            self.topbar_frame,
-            text="+ Add New",
-            width=DATA_FRAME_UI['topbar_btn_width'],
+        # ── Status Filter Frame ──────────────────────────────────────────
+
+        # Create a small label above the checkboxes
+        ctk.CTkLabel(self.topbar_frame, text="Filter by Action:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=0, column=2, padx=4, pady=(1,0), sticky="w")
+
+        # Creating a Dict of Filters where each filter name is a BooleanVar()
+        filter_list = ["Insert", "Update", "Delete"]
+        self.filters_var = {}
+
+        for filter in filter_list:
+            self.filters_var[filter] = ctk.BooleanVar(value=True)
+        
+        filter_frame = ctk.CTkFrame(self.topbar_frame, fg_color="transparent")
+        filter_frame.grid(row=1, column=2, padx=2, pady=0, sticky="nsew")
+
+        # Automatically arrange checkboxes, 2 per col
+        for i, filter in enumerate(filter_list):
+            row_idx = i % 2    # Modulo division:  0, 1, 0, 1
+            col_idx = i // 2   # Integer division: 0, 0, 1, 1
+            
+            chk = ctk.CTkCheckBox(filter_frame, text=filter, font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size = 11), checkbox_height=15, checkbox_width=15, variable=self.filters_var[filter])
+            chk.grid(row=row_idx, column=col_idx, padx=1, sticky=FORM_UI["entry_sticky"])
+            
+            # Attach trace directly to the checkbox variable
+            self.filters_var[filter].trace_add("write", self._on_search)
+
+        # # ── Add button ─────────────────────────────────────────────────
+        # self.add_btn = ctk.CTkButton(
+        #     self.topbar_frame,
+        #     text="+ Add New",
+        #     width=DATA_FRAME_UI['topbar_btn_width'],
+        #     height=DATA_FRAME_UI['btn_height'],
+        #     font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
+        #     fg_color=DATA_FRAME_UI['btn_fg'],
+        #     border_width=DATA_FRAME_UI['btn_border'],
+        #     hover_color=DATA_FRAME_UI['btn_hover'],
+        #     text_color=DATA_FRAME_UI['btn_text'],
+        #     command=self._on_add
+        # )
+        # self.add_btn.grid(row=1, column=2, padx=4, pady=(1,6))
+
+        # ── Date Filter Section (Replaces Add Button) ──────────────────
+        self.date_filter_frame = ctk.CTkFrame(self.topbar_frame, fg_color="transparent")
+        self.date_filter_frame.grid(row=0, column=3, rowspan=2, padx=2, pady=(1,6))
+
+        # Variables
+        self.from_date_var = ctk.StringVar()
+        self.to_date_var = ctk.StringVar()
+
+        ctk.CTkLabel(self.date_filter_frame, text="From Date:", font=ctk.CTkFont(size=12)).grid(row=0, column=0, padx=1)
+        ctk.CTkLabel(self.date_filter_frame, text="To Date:", font=ctk.CTkFont(size=12)).grid(row=1, column=0, padx=1)       
+
+
+        # From Date Entry
+        self.from_entry = ctk.CTkEntry(
+            self.date_filter_frame,
+            width=100,
             height=DATA_FRAME_UI['btn_height'],
-            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
-            fg_color=DATA_FRAME_UI['btn_fg'],
-            border_width=DATA_FRAME_UI['btn_border'],
-            hover_color=DATA_FRAME_UI['btn_hover'],
-            text_color=DATA_FRAME_UI['btn_text'],
-            command=self._on_add
+            placeholder_text="DD-MM-YYYY",
+            textvariable=self.from_date_var
         )
-        self.add_btn.grid(row=1, column=2, padx=4, pady=(1,6))
+        self.from_entry.grid(row=0, column=1, padx=1)
+
+
+        # To Date Entry
+        self.to_entry = ctk.CTkEntry(
+            self.date_filter_frame,
+            width=100,
+            height=DATA_FRAME_UI['btn_height'],
+            placeholder_text="DD-MM-YYYY",
+            textvariable=self.to_date_var
+        )
+        self.to_entry.grid(row=1, column=1, padx=1)
+
+        # Apply Filter Button (Small icon version to save space)
+        self.apply_date_btn = ctk.CTkButton(
+            self.date_filter_frame,
+            text="📅 Filter",
+            width=70,
+            height=DATA_FRAME_UI['btn_height'],
+            fg_color=DATA_FRAME_UI['btn_fg'],
+            hover_color=DATA_FRAME_UI['btn_hover'],
+            command=self._on_date_filter
+        )
+        self.apply_date_btn.grid(row=0, column=3, padx=(1, 2))
 
         # ── Export button ──────────────────────────────────────────────
         self.export_btn = ctk.CTkButton(
@@ -99,7 +168,7 @@ class AuditFrame(ctk.CTkFrame):
             text_color=DATA_FRAME_UI['btn_text'],
             command=self._on_export
         )
-        self.export_btn.grid(row=1, column=3, padx=(4,6), pady=(1,6))
+        self.export_btn.grid(row=1, column=4, padx=(4,6), pady=(1,6))
 
 
     def _build_table(self):
@@ -200,14 +269,20 @@ class AuditFrame(ctk.CTkFrame):
     def _on_search(self,  *args):
         search_term = self.searchbar_var.get().strip()
         search_term = search_term.upper()
+
+        # Getting Ticked Filters
+        # Create a list of the names of all checked status
+        selected_filter = [filter for filter, var in self.filters_var.items() if var.get()]
+        
         # if there is no SearchTerm, Load Normal Data
         if not search_term:
-            self.load_data()
+            rows = search_audit(search_term, selected_filter)
+            self._refresh_table(rows)
         # Else search the Data and load it
         else:
             if search_term.startswith("USR-"):
                 search_term = search_term.replace("USR-","")
-            rows = search_audit(search_term)
+            rows = search_audit(search_term, selected_filter)
             self._refresh_table(rows)
 
         # Clear selection after every search
@@ -227,7 +302,7 @@ class AuditFrame(ctk.CTkFrame):
         self.selected_row = dict(zip(column_usernames, values))
 
         # Updating the Selection Label
-        self.selection_label.configure(text= f'ID: {self.selected_row['user_id']} | username: {self.selected_row['username']}')
+        self.selection_label.configure(text= f'ID: {self.selected_row['user_id']} | Username: {self.selected_row['username']} | Timestamp: {self.selected_row['timestamp']}')
 
 
 
@@ -240,6 +315,33 @@ class AuditFrame(ctk.CTkFrame):
         export_to_excel(tree=self.table, default_filename="audits_export")
 
 
-    def _on_add(self):
-        pass
+    # def _on_add(self):
+    #     pass
         
+
+    def _on_date_filter(self):
+        from_date = self.from_date_var.get().strip()
+        to_date = self.to_date_var.get().strip()
+
+        # 1. Basic validation: If both are empty, just reload all
+        if not from_date and not to_date:
+            self.load_data()
+            return
+
+        # 2. Simple format check (you can make this more robust with datetime)
+        if len(from_date) != 10 or len(to_date) != 10:
+            messagebox.showwarning("Invalid Date", "Please use DD-MM-YYYY format.")
+            return
+
+        # 3. Call service
+        # Note: Your service 'get_by_date_audit' should handle the DB query
+        rows = get_by_date_audit(from_date, to_date)
+        
+        if rows is not None:
+            self._refresh_table(rows)
+            self.selection_label.configure(text=f"Showing results from {from_date} to {to_date}")
+        else:
+            messagebox.showerror("Error", "Could not fetch data for these dates.")
+
+
+            

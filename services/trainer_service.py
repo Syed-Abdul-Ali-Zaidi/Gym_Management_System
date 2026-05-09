@@ -19,14 +19,19 @@ def get_all_trainer():
     finally:
         conn.close()
 
-def search_trainer(searchterm):
+def search_trainer(searchterm, active_filters):
     '''This will search trainer(s) by thier NAME or ID'''
     conn = get_db_connection()
     try:
+        if not active_filters:
+            return []
+
+        placeholders = ", ".join(["%s"] * len(active_filters))
+        
         cursor = conn.cursor(dictionary=True)
-        query = """
+        query = f"""
             SELECT * FROM trainer
-            WHERE trainer_id=%s OR name LIKE %s
+            WHERE status IN ({placeholders})  AND (trainer_id=%s OR name LIKE %s)
             ORDER BY status
         """
 
@@ -36,7 +41,7 @@ def search_trainer(searchterm):
         else:
             id_val = 0
         
-        cursor.execute(query,(id_val,name_term))
+        cursor.execute(query,tuple(active_filters) + (id_val, name_term))
         rows = cursor.fetchall() 
         return rows
     except Exception as e:

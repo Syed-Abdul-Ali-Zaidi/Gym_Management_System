@@ -18,14 +18,19 @@ def get_all_audit():
     finally:
         conn.close()
 
-def search_audit(searchterm):
-    '''This will search audit_log(s) by thier USER_ID or USERNAME or ACTION or TABLE_NAME '''
+def search_audit(searchterm, active_filters):
+    '''This will search audit_log(s) by thier USER_ID or USERNAME or TABLE_NAME '''
     conn = get_db_connection()
     try:
+        if not active_filters:
+            return []
+
+        placeholders = ", ".join(["%s"] * len(active_filters))
+
         cursor = conn.cursor(dictionary=True)
-        query = """
+        query = f"""
             SELECT * FROM audit_view
-            WHERE user_id=%s OR username LIKE %s OR action LIKE %s OR table_name LIKE %s
+            WHERE action IN ({placeholders})  AND (user_id=%s OR username LIKE %s OR table_name LIKE %s)
             ORDER BY timestamp DESC
         """
 
@@ -36,7 +41,7 @@ def search_audit(searchterm):
         else:
             id_val = 0
         
-        cursor.execute(query,(id_val,name_term, name_term, name_term))
+        cursor.execute(query, tuple(active_filters) + (id_val, name_term, name_term))
         rows = cursor.fetchall() 
         return rows
     except Exception as e:

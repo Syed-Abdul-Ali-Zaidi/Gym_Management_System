@@ -18,14 +18,20 @@ def get_all_plan():
     finally:
         conn.close()
 
-def search_plan(searchterm):
+def search_plan(searchterm, active_filters):
     '''This will search plan(s) by thier NAME or ID'''
     conn = get_db_connection()
     try:
+        if not active_filters:
+            return []
+
+        placeholders = ", ".join(["%s"] * len(active_filters))
+
         cursor = conn.cursor(dictionary=True)
-        query = """
+        query = f"""
             SELECT * FROM membership_plan
-            WHERE plan_id=%s OR plan_name LIKE %s
+            WHERE status IN ({placeholders})  AND (plan_id=%s OR plan_name LIKE %s)
+            ORDER BY status
         """
 
         name_term = f'%{searchterm}%'
@@ -34,7 +40,7 @@ def search_plan(searchterm):
         else:
             id_val = 0
         
-        cursor.execute(query,(id_val,name_term))
+        cursor.execute(query,tuple(active_filters) + (id_val, name_term))
         rows = cursor.fetchall() 
         return rows
     except Exception as e:
