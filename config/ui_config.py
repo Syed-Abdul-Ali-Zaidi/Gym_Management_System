@@ -10,13 +10,20 @@ APP_THEME = {
     "primary_green":       "#1a3a5c",
     "hover_green":         "#4DA6FF",
 
+    # # ── Danger (delete, logout, errors) ───────────────────────────────────────
+    # "danger_red":          "#FF6B6B",
+    # "danger_hover":        "#4a1a1a",
+
+    # # ── Success (edit button) ──────────────────────────────────────────────────
+    # "success_green":       "#22C55E",
+    # "success_hover":       "#1B4332",
     # ── Danger (delete, logout, errors) ───────────────────────────────────────
-    "danger_red":          "#FF6B6B",
-    "danger_hover":        "#4a1a1a",
+    "danger_red":          "#a20505",
+    "danger_hover":        "#FACDCD",
 
     # ── Success (edit button) ──────────────────────────────────────────────────
-    "success_green":       "#22C55E",
-    "success_hover":       "#1B4332",
+    "success_green":        "#098A27",
+    "success_hover":        "#B7F5CD",
 
     # ── Neutral (standard buttons) ────────────────────────────────────────────
     "primary_color":       "#344E61",
@@ -91,8 +98,8 @@ SIDEBAR_UI = {
     "btn_hover_color":  APP_THEME["hover_green"],
 
     # ── Style: Logout ─────────────────────────────────────────────────────────
-    "logout_text":      APP_THEME["danger_red"],
-    "logout_hover":     APP_THEME["danger_hover"],
+    "logout_text":      APP_THEME["danger_hover"],
+    "logout_hover":     APP_THEME["danger_red"],
 }
 
 # ── Main Content Container ─────────────────────────────────────────────────────
@@ -164,6 +171,12 @@ DATA_FRAME_UI = {
     "audit_insert":      "#DCFCE7",   # soft green
     "audit_update":      "#FEF3C7",   # soft yellow
     "audit_delete":      "#FEE2E2",   # soft red
+
+    # ── Membership status row colors ─────────────────────────────
+    "membership_active":      "#DCFCE7",   # soft green
+    "membership_cancelled":      "#FEF3C7",   # soft yellow
+    "membership_expired":      "#FEE2E2",   # soft red
+    "membership_upcoming":   "#E0E7FF"
 
 
     }

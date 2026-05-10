@@ -225,7 +225,7 @@ class MembersFrame(ctk.CTkFrame):
                 row['phone_no'] or '',  # if there is a NULL value Tree will show None so replace it with ""
                 row['gender'],
                 row['status'],
-                formatted_date,),
+                formatted_date),
                 tags= (tag,)
             )
             

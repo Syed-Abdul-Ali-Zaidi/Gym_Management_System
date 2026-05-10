@@ -283,7 +283,7 @@ END //
 
 CREATE TRIGGER membership_update
 AFTER UPDATE ON membership FOR EACH ROW
-BEGIN
+trigger_block: BEGIN
     -- Create empty strings to hold only the changed data then append PK in it
     DECLARE old_changes VARCHAR(500) DEFAULT '';
     DECLARE new_changes VARCHAR(500) DEFAULT '';
@@ -292,10 +292,12 @@ BEGIN
 
 
     -- Check each column one by one. (Using COALESCE handles NULL comparisons safely)
-    IF COALESCE(OLD.status,'') != COALESCE(NEW.status,'') THEN
-        SET old_changes = CONCAT(old_changes, '|status:', OLD.status);
-        SET new_changes = CONCAT(new_changes, '|status:', NEW.status);
+    IF NOT ( COALESCE(OLD.status,'') != COALESCE(NEW.status,'') AND NEW.status = 'Cancelled') THEN
+            LEAVE trigger_block;
     END IF;
+
+    SET old_changes = CONCAT(old_changes, '|status:', OLD.status);
+    SET new_changes = CONCAT(new_changes, '|status:', NEW.status);
 
     IF COALESCE(OLD.agreed_plan_fee,'') != COALESCE(NEW.agreed_plan_fee,'') THEN
         SET old_changes = CONCAT(old_changes, '|agreed_plan_fee:', OLD.agreed_plan_fee);

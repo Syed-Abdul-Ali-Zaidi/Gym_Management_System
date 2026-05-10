@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox
 from config.ui_config import DATA_FRAME_UI, FORM_UI
 from services.membership_service import (
     get_all_membership, search_membership, insert_membership,
-    update_membership, delete_membership, get_membership_form_data
+    update_membership, delete_membership, get_membership_form_data, sync_statuses_membership
 )
 from ui.excel_file_maker import export_to_excel
 
@@ -40,7 +40,7 @@ class MembershipsFrame(ctk.CTkFrame):
 
 
         # ── Search entry ───────────────────────────────────────────────
-        ctk.CTkLabel(self.topbar_frame, text="Search by MembershipID or membershipmember_name", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=0, column=0, padx=(6,4), pady=(1,0), sticky="w")
+        ctk.CTkLabel(self.topbar_frame, text="Search by MembershipID or Member Name or PlanID or TrianerID", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=0, column=0, padx=(6,4), pady=(1,0), sticky="w")
 
         # ── Search entry ───────────────────────────────────────────────
         self.searchbar_var = ctk.StringVar(value="")
@@ -166,10 +166,10 @@ class MembershipsFrame(ctk.CTkFrame):
         self.table.column('start_date',         width=150, minwidth=150, anchor='center')
         self.table.column('end_date',           width=150, minwidth=150, anchor='center')
         self.table.column('status',             width=150, minwidth=150, anchor='center')
-        self.table.column('agreed_plan_fee',    width=150, minwidth=150, anchor='center')
+        self.table.column('agreed_plan_fee',    width=200, minwidth=200, anchor='center')
         self.table.column('trainer_id',         width=150, minwidth=150, anchor='center')
         self.table.column('trainer_name',       width=250, minwidth=250)
-        self.table.column('agreed_trainer_fee', width=150, minwidth=150, anchor='center')
+        self.table.column('agreed_trainer_fee', width=200, minwidth=200, anchor='center')
 
 
         self.table.bind('<<TreeviewSelect>>', self._on_row_select)
@@ -236,18 +236,20 @@ class MembershipsFrame(ctk.CTkFrame):
 
 
     def load_data(self):
+        sync_statuses_membership()
         rows = get_all_membership()
         self._refresh_table(rows)
 
     def _refresh_table(self,rows):
         # Deletes existing rows
         self.table.delete(*self.table.get_children())
+        sync_statuses_membership()
         
         # Creating Stripped row tags
         self.table.tag_configure('Active', background=DATA_FRAME_UI['membership_active'])
         self.table.tag_configure('Expired', background=DATA_FRAME_UI['membership_expired'])
         self.table.tag_configure('Cancelled', background=DATA_FRAME_UI['membership_cancelled'])
-        self.table.tag_configure('Upcoming', background=DATA_FRAME_UI['membership_cancelled'])
+        self.table.tag_configure('Upcoming', background=DATA_FRAME_UI['membership_upcoming'])
 
         # inserts New Data
         for row in rows:
@@ -255,7 +257,10 @@ class MembershipsFrame(ctk.CTkFrame):
 
             formatted_mem_id = f'MEM-{row['member_id']}'
             formatted_pln_id = f'PLN-{row['plan_id']}'
-            formatted_trn_id = f'TRN-{row['trainer_id']}'
+            if row['trainer_id'] is not None:
+                formatted_trn_id = f'TRN-{row["trainer_id"]}'
+            else:
+                formatted_trn_id = ''
 
             formatted_start_date = row['start_date'].strftime("%d-%m-%Y")
             formatted_end_date = row['end_date'].strftime("%d-%m-%Y")            
@@ -372,17 +377,22 @@ class MembershipsFrame(ctk.CTkFrame):
     def _open_form(self, mode):
         popup = ctk.CTkToplevel(self)
         popup.title("Add membership" if mode == "add" else "Edit membership")
-        popup.geometry('500x600')
+        popup.geometry('400x370')
         popup.resizable(False, False) 
         
         # ── 1. Fetch & Structure Lookups ──────────────────────────────────────
         from services.membership_service import get_membership_form_data
-        m_list, p_list, t_list = get_membership_form_data()
+        members_list, plans_list, trainers_list = get_membership_form_data()
 
-        # Structured as: {"ID": {'name': NAME, ...}}
-        self.members = {str(m['member_id']): m for m in m_list}
-        self.plans   = {str(p['plan_id']): p for p in p_list}
-        self.trainers = {str(t['trainer_id']): t for t in t_list}
+       # 2. Build your specialized Lookups
+        # Format: {"1": {"name": "Ali", ...}}
+        self.members = {str(m['member_id']): m for m in members_list}
+        
+        # Format: {"101": {"plan_name": "Gold", "fee": 5000, "duration_days": 30}}
+        self.plans = {str(p['plan_id']): p for p in plans_list}
+        
+        # Format: {"5": {"name": "John", "fee": 2000}}
+        self.trainers = {str(t['trainer_id']): t for t in trainers_list}
 
         # ── 2. Initialize Variables ───────────────────────────────────────────
         self.mem_id_var             = ctk.StringVar()
@@ -390,7 +400,7 @@ class MembershipsFrame(ctk.CTkFrame):
         self.pln_selection_var      = ctk.StringVar(value="Select Plan")
         self.start_date_var         = ctk.StringVar()
         self.end_date_var           = ctk.StringVar()
-        self.status_var             = ctk.StringVar(value="Active")
+        self.status_var             = ctk.StringVar()
         self.agreed_plan_fee_var    = ctk.StringVar(value="0")
         self.trn_selection_var      = ctk.StringVar(value="No Trainer")
         self.agreed_trainer_fee_var = ctk.StringVar(value="0")
@@ -403,10 +413,16 @@ class MembershipsFrame(ctk.CTkFrame):
         self._build_form_fields(popup)
         self._build_form_buttons(popup, mode)
 
+        self.form_mode = mode
+
+        if mode == 'add':
+            self.status_menu.configure(state='disabled')
+            self.status_var.set('Auto')
+
         # ── 4. Edit Mode Logic ───────────────────────────────────────────────
         if mode == 'edit':
             # Pre-fill variables from the selected row dictionary
-            self.mem_id_var.set(str(self.selected_row['member_id']).replace("MEM-", ""))
+            self.mem_id_var.set(str(self.selected_row['member_id']))
             self.mem_name_var.set(self.selected_row['member_name'])
             
             formatted_plan_name = f'{self.selected_row['plan_id']} - {self.selected_row['plan_name']}'
@@ -414,19 +430,22 @@ class MembershipsFrame(ctk.CTkFrame):
             
             self.start_date_var.set(self.selected_row['start_date'])
             self.end_date_var.set(self.selected_row['end_date'])
-            self.status_var.set(self.selected_row['status'])
-            self.agreed_plan_fee_var.set(str(self.selected_row['agreed_plan_fee']))
+            if self.selected_row['status'] == "Cancelled":
+                self.status_var.set("Cancelled")
+            else:
+                self.status_var.set("Current Status")
+            self.agreed_plan_fee_var.set(str(self.selected_row['agreed_plan_fee']) or '0')
             
             if self.selected_row.get('trainer_id'):
-                formatted_trainer_name = f'{self.selected_row['trainer_id']} - {self.selected_row['name']}'
+                formatted_trainer_name = f'{self.selected_row['trainer_id']} - {self.selected_row['trainer_name']}'
                 self.trn_selection_var.set(formatted_trainer_name)
-                self.agreed_trainer_fee_var.set(str(self.selected_row['agreed_trainer_fee']))
+                self.agreed_trainer_fee_var.set(str(self.selected_row['agreed_trainer_fee']) or '0')
 
             # DISABLE specified fields in Edit Mode
             # Ensure these names match the widget references in _build_form_fields
-            self.mem_id_entry.configure(state='disabled', text_color="#9E9E9E")
-            self.pln_dropdown.configure(state='disabled', text_color="#9E9E9E")
-            self.start_date_entry.configure(state='disabled', text_color="#9E9E9E")
+            self.mem_entry.configure(state='disabled', text_color="#9E9E9E")
+            self.plan_menu.configure(state='disabled', text_color="#9E9E9E")
+            self.start_entry.configure(state='disabled', text_color="#9E9E9E")
             # Note: end_date_entry should be disabled in BOTH modes (auto-filled only)
         
         # # End Date is always disabled as it's auto-calculated
@@ -440,60 +459,72 @@ class MembershipsFrame(ctk.CTkFrame):
             form_frame = ctk.CTkFrame(popup)
             form_frame.grid(row=0, column=0, padx=20, pady=10)
 
-            # Member Selection
-            ctk.CTkLabel(form_frame, text="Member ID:").grid(row=0, column=0, sticky="e", pady=5)
+            # Row 0 - Member Selection
+            ctk.CTkLabel(form_frame, text="Member ID:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=0, column=0, padx=10, pady=(5,FORM_UI['row_pady']), sticky=FORM_UI["label_sticky"])
             self.mem_entry = ctk.CTkEntry(form_frame, textvariable=self.mem_id_var, width=80)
-            self.mem_entry.grid(row=0, column=1, sticky="w", padx=10)
+            self.mem_entry.grid(row=0, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
             # Name label next to ID
-            ctk.CTkLabel(form_frame, textvariable=self.mem_name_var, text_color="#4DA6FF").grid(row=0, column=1, sticky="e")
+            ctk.CTkLabel(form_frame, textvariable=self.mem_name_var, font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=11, slant="italic")).grid(row=0, column=2, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
-            # Plan Dropdown
-            ctk.CTkLabel(form_frame, text="Plan:").grid(row=1, column=0, sticky="e", pady=5)
+            # Row 1 - Plan Dropdown
+            ctk.CTkLabel(form_frame, text="Plan:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=1, column=0, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
             # Create "ID - Name" list for dropdown from your dictionary
-            plan_options = [f"{pid} - {p['plan_name']}" for pid, p in self.plans.items()]
-            self.plan_menu = ctk.CTkOptionMenu(form_frame, variable=self.pln_selection_var, values=plan_options)
-            self.plan_menu.grid(row=1, column=1, sticky="w", padx=10)
+            plan_options = ["No plan"] + [f"{pid} - {p['plan_name']}" for pid, p in self.plans.items()]
+            self.plan_menu = ctk.CTkOptionMenu(form_frame, variable=self.pln_selection_var, values=plan_options, text_color='black', fg_color= DATA_FRAME_UI['btn_fg'], dropdown_hover_color= DATA_FRAME_UI['btn_hover'])
+            self.plan_menu.grid(row=1, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
-            # Dates
-            ctk.CTkLabel(form_frame, text="Start Date:").grid(row=2, column=0, sticky="e", pady=5)
+            # Row 2 3 - Dates
+            ctk.CTkLabel(form_frame, text="Start Date:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=2, column=0, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
             self.start_entry = ctk.CTkEntry(form_frame, textvariable=self.start_date_var)
-            self.start_entry.grid(row=2, column=1, sticky="w", padx=10)
+            self.start_entry.grid(row=2, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
-            ctk.CTkLabel(form_frame, text="End Date:").grid(row=3, column=0, sticky="e", pady=5)
+            ctk.CTkLabel(form_frame, text="End Date:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=3, column=0, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
             # This is the disabled entry you requested
             self.end_entry = ctk.CTkEntry(form_frame, textvariable=self.end_date_var, state="disabled", text_color="#9E9E9E")
-            self.end_entry.grid(row=3, column=1, sticky="w", padx=10)
+            self.end_entry.grid(row=3, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
-            # Row 3 - Status (Dropdown)
-            ctk.CTkLabel(form_frame, text="Status:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=3, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
-            ctk.CTkOptionMenu(form_frame, variable=self.status_var, values=["Select Status", "Active", "Inactive"], text_color='black', fg_color= DATA_FRAME_UI['btn_fg'], dropdown_hover_color= DATA_FRAME_UI['btn_hover']).grid(row=3, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
+            # Row 4 - Status (Dropdown)
+            ctk.CTkLabel(form_frame, text="Status:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=4, column=0, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+            self.status_menu = ctk.CTkOptionMenu(form_frame, variable=self.status_var, values=["Current Status", "Cancelled"], text_color='black', fg_color= DATA_FRAME_UI['btn_fg'], dropdown_hover_color= DATA_FRAME_UI['btn_hover'])
+            self.status_menu.grid(row=4, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
                 
-            # Agreed_plan_fee
-            ctk.CTkLabel(form_frame, text="Agreed Plan Fee:").grid(row=5, column=0, sticky="e", pady=5)
-            self.agreed_plnfee_entry = ctk.CTkEntry(form_frame, textvariable=self.agreed_plan_fee_var)
-            self.agreed_plnfee_entry.grid(row=5, column=1, sticky="w", padx=10)
+            # Row 5 - Agreed_plan_fee
+            ctk.CTkLabel(form_frame, text="Agreed Plan Fee:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=5, column=0, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+            self.agreed_plnfee_entry = ctk.CTkEntry(form_frame,state='disabled', text_color="#9E9E9E", textvariable=self.agreed_plan_fee_var)
+            self.agreed_plnfee_entry.grid(row=5, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
-            # Trainer Dropdown
-            ctk.CTkLabel(form_frame, text="Trainer:").grid(row=6, column=0, sticky="e", pady=5)
+            # Row 6 - Trainer (Dropdown)
+            ctk.CTkLabel(form_frame, text="Trainer:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=6, column=0, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
             # Create "ID - Name" list for dropdown from your dictionary
-            trainer_options = [f"{pid} - {p['name']}" for pid, p in self.plans.items()]
-            self.trainer_menu = ctk.CTkOptionMenu(form_frame, variable=self.trn_selection_var, values=trainer_options)
-            self.trainer_menu.grid(row=6, column=1, sticky="w", padx=10)
+            trainer_options = ["No Trainer"] + [f"{tid} - {t['name']}" for tid, t in self.trainers.items()]
+            self.trainer_menu = ctk.CTkOptionMenu(form_frame, variable=self.trn_selection_var, values=trainer_options, text_color='black', fg_color= DATA_FRAME_UI['btn_fg'], dropdown_hover_color= DATA_FRAME_UI['btn_hover'])
+            self.trainer_menu.grid(row=6, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
-            # Agreed_trainer_fee
-            ctk.CTkLabel(form_frame, text="Agreed Trainer Fee:").grid(row=7, column=0, sticky="e", pady=5)
-            self.agreed_plnfee_entry = ctk.CTkEntry(form_frame, textvariable=self.agreed_trainer_fee_var)
-            self.agreed_plnfee_entry.grid(row=7, column=1, sticky="w", padx=10)
+            # Row 7 - Agreed_trainer_fee
+            ctk.CTkLabel(form_frame, text="Agreed Trainer Fee:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=7, column=0, pady=FORM_UI['row_pady'], sticky=FORM_UI["label_sticky"])
+            self.agreed_trnfee_entry = ctk.CTkEntry(form_frame,state='disabled', text_color="#9E9E9E", textvariable=self.agreed_trainer_fee_var)
+            self.agreed_trnfee_entry.grid(row=7, column=1, padx=10, pady=FORM_UI['row_pady'], sticky=FORM_UI["entry_sticky"])
 
+            # Row 8 - Error message ──────────────────────────────────
+            self.error_label = ctk.CTkLabel(form_frame, text="", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']), text_color=FORM_UI['error_color'])
+            self.error_label.grid(row=8, column=0, columnspan=2)
 
-            # Attach Traces
-            self.mem_id_var.trace_add("write", self._on_mem_id_change)
+            # ── Action Traces (Auto-filling) ──────────────────────────────────────
+            self.mem_id_var.trace_add("write", self._on_mem_change)
             self.pln_selection_var.trace_add("write", self._on_plan_change)
-            self.start_date_var.trace_add("write", self._on_plan_change) # Updates end_date if user changes start_date
-            self.agreed_plan_fee_var.trace_add("write", self._on_plan_change)
+            self.start_date_var.trace_add("write", self._on_date_change)
+            self.trn_selection_var.trace_add("write", self._on_trainer_change)
+
+            # ── Validation Traces (Checking rules) ────────────────────────────────
+            # Everything triggers validate so the Save button updates in real-time
+            self.mem_id_var.trace_add("write", self._validate)
+            self.pln_selection_var.trace_add("write", self._validate)
+            self.start_date_var.trace_add("write", self._validate) 
+            self.agreed_plan_fee_var.trace_add("write", self._validate)
             self.status_var.trace_add("write", self._validate)
-            self.trn_selection_var.trace_add("write",self.on_trainer_change)
-            self.agreed_trainer_fee_var.trace_add("write", self.on_trainer_change)
+            self.trn_selection_var.trace_add("write", self._validate)
+            self.agreed_trainer_fee_var.trace_add("write", self._validate)
+
 
     def _build_form_buttons(self, popup, mode):
         btn_frame = ctk.CTkFrame(popup, fg_color="transparent")
@@ -505,62 +536,115 @@ class MembershipsFrame(ctk.CTkFrame):
 
         self.cancel_btn = ctk.CTkButton(btn_frame, text="Cancel", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']), width=FORM_UI['btn_width'], border_width=DATA_FRAME_UI['btn_border'], fg_color=DATA_FRAME_UI['btn_fg'], hover_color=DATA_FRAME_UI['btn_hover'], text_color=DATA_FRAME_UI['btn_text'], command= popup.destroy)
         self.cancel_btn.pack(side="left", padx=FORM_UI['btn_padx'])
+   
 
-    def _on_mem_id_change(self, *args):
-            """Find member name instantly using the ID key."""
-            uid = self.mem_id_var.get().strip().replace("MEM-", "")
-            if uid in self.members:
-                self.mem_name_var.set(self.members[uid]['name'])
-            else:
-                self._form_error("❌ Member Not Found")
+
+    def _on_mem_change(self, *args):
+        memid = self.mem_id_var.get().strip().upper().replace("MEM-", "")
+
+        if memid in self.members:
+            self.mem_name_var.set(self.members[memid]['name'])
+        else:
+            self.mem_name_var.set("❌ Not Found")
 
     def _on_plan_change(self, *args):
-        """Auto-fill Fee and calculate End Date using dictionary lookup."""
-        selection = self.plan_selection_var.get()
-        if " - " in selection:
-            plan_id = selection.split(" - ")[0]
+        pln_selection = self.pln_selection_var.get()
+        if " - " in pln_selection:
+            # 1. Extract the ID part (e.g., "PLN-2")
+            raw_id = pln_selection.split(" - ")[0]
             
-            # Access the dictionary directly using the ID!
-            plan_data = self.plans[plan_id]
+            # 2. STRIP the prefix to get just the number (e.g., "2")
+            plan_id = raw_id.replace("PLN-", "")
+            self.agreed_plan_fee_var.set(str(self.plans[plan_id]['fee']))
+
+            # Enable the entry
+            self.agreed_plnfee_entry.configure(state='normal', text_color="black")
+        else:   # reset the fee and disable entry
+            self.agreed_plan_fee_var.set("0")
+            self.agreed_plnfee_entry.configure(state='disabled', text_color="#9E9E9E" )
             
-            # Set Fee
-            self.agreed_plan_fee_var.set(str(plan_data['fee']))
+        self._on_date_change() # Trigger date calculation
+
+    def _on_date_change(self, *args):
+        from datetime import datetime, timedelta
+        pln_selection = self.pln_selection_var.get()
+        start_date_str = self.start_date_var.get().strip()
+
+        if " - " in pln_selection:
+            # 1. Extract the ID part (e.g., "PLN-2")
+            raw_id = pln_selection.split(" - ")[0]
             
-            # Calculate End Date
-            from datetime import datetime, timedelta
+            # 2. STRIP the prefix to get just the number (e.g., "2")
+            plan_id = raw_id.replace("PLN-", "")
             try:
-                start_dt = datetime.strptime(self.start_date_var.get(), "%d-%m-%Y")
-                # Add duration from your dictionary
-                end_dt = start_dt + timedelta(days=int(plan_data['duration_days']))
+                start_dt = datetime.strptime(start_date_str, "%d-%m-%Y")
+                end_dt = start_dt + timedelta(days=int(self.plans[plan_id]['duration_days']))
                 self.end_date_var.set(end_dt.strftime("%d-%m-%Y"))
-            except:
+            except ValueError:
                 self.end_date_var.set("Invalid Start Date")
 
     def _on_trainer_change(self, *args):
-        """Auto-fill Fee and calculate End Date using dictionary lookup."""
-        selection = self.trn_selection_var.get()
-        if " - " in selection:
-            trainer_id = selection.split(" - ")[0]
-            
-            # Access the dictionary directly using the ID!
-            trainer_data = self.trainers[trainer_id]
-            
-            # Set Fee
-            self.agreed_trainer_fee_var.set(str(trainer_data['default_fee']))
+        trn_selection = self.trn_selection_var.get()
+        if " - " in trn_selection:
+            # 1. Extract the ID part (e.g., "TRN-2")
+            raw_id = trn_selection.split(" - ")[0]
+            # 2. STRIP the prefix to get just the number (e.g., "2")
+            trainer_id = raw_id.replace("TRN-", "")
 
-            return True
-            
+            if trainer_id in self.trainers:
+                fee = self.trainers[trainer_id]['default_fee']
+                self.agreed_trainer_fee_var.set(str(fee))
+                self.agreed_trnfee_entry.configure(state='normal', text_color="black")
+        else:
+            self.agreed_trainer_fee_var.set('0')
+            self.agreed_trnfee_entry.configure(state='disabled', text_color="#9E9E9E")
+
     def _validate(self, *args):
-        status       = self.status_var.get().strip()
+        from datetime import datetime
 
-        # Required: status
-        if status not in ('Active', 'Inactive'):
-            self._form_error("⚠ Please select a status.")
+        memid = self.mem_id_var.get().strip().upper().replace("MEM-", "")
+        pln_selection = self.pln_selection_var.get()
+        start_date_str = self.start_date_var.get().strip()
+        status = self.status_var.get().strip()
+        pln_fee = self.agreed_plan_fee_var.get().strip()
+        trn_selection = self.trn_selection_var.get()
+        trn_fee = self.agreed_trainer_fee_var.get().strip()
+
+        # 1. Member
+        if memid not in self.members:
+            self._form_error("⚠ Please enter a valid Member ID.")
             return
         
-         # All passed
-        self._form_ok()
+        # 2. Plan
+        if " - " not in pln_selection:
+            self._form_error("⚠ Please select a Membership Plan.")
+            return
 
+        # 3. Start Date Safely Checked
+        try:
+            datetime.strptime(start_date_str, "%d-%m-%Y")
+        except ValueError:
+            self._form_error("⚠ Start Date must be valid DD-MM-YYYY.")
+            return
+
+        # 4. Status validation (Edit mode only)
+        if self.form_mode == "edit":
+            if status not in ("Current Status", "Cancelled"):
+                self._form_error("⚠ Please select a valid status.")
+                return
+        
+        # 5. Plan Fee
+        if not self.is_float(pln_fee):
+            self._form_error("⚠ Plan Fee must be a number.")
+            return
+        
+        # 6. Trainer Fee
+        if " - " in trn_selection and not self.is_float(trn_fee):
+            self._form_error("⚠ Trainer Fee must be a number.")
+            return
+        
+        # All passed
+        self._form_ok()
 
     def _form_error(self, message):
         """Show error and disable Save."""
@@ -576,34 +660,69 @@ class MembershipsFrame(ctk.CTkFrame):
     def _on_save(self, popup, mode):
         from datetime import datetime
 
-        member_name      = self.member_name_var.get().strip()
-        phone     = self.phone_var.get().strip()
-        plan_name    = self.plan_name_var.get().strip()
-        start_date    = self.start_date_var.get().strip()
-        end_date = self.end_date_var.get().strip()
+        member_id = self.mem_id_var.get().strip().upper().replace("MEM-", "")
+        
+        pln_selection = self.pln_selection_var.get()
+        f_plan_id = pln_selection.split(" - ")[0]
+        plan_id = str(f_plan_id).replace("PLN-","")
+        
+        formatted_startdate = self.start_date_var.get()
+        start_date = datetime.strptime(formatted_startdate, "%d-%m-%Y").strftime("%Y-%m-%d")
+        
+        # Preparing dates as date object for status function
+        start_dt = datetime.strptime(formatted_startdate, "%d-%m-%Y").date()
+        formatted_enddate = self.end_date_var.get()
+        end_dt = datetime.strptime(formatted_enddate, "%d-%m-%Y").date()
+        
+        if mode == "add":
+            status = self.calculate_membership_status(start_dt, end_dt)
 
-        formatted_date = datetime.strptime(end_date, "%d-%m-%Y").strftime("%Y-%m-%d")
+        else:
+            if self.status_var.get() == "Cancelled":
+                status = "Cancelled"
+            else:
+                status = self.calculate_membership_status(start_dt, end_dt)
+                agreed_plnfee = self.agreed_plan_fee_var.get().strip()
+        
+        agreed_plnfee = self.agreed_plan_fee_var.get().strip()
+
+        # Safely handle the Trainer ID
+        trn_selection = self.trn_selection_var.get()
+        trainer_id = None  # Default to None
+        if " - " in trn_selection:
+            # 1. Get "TRN-1"
+            raw_trn_id = trn_selection.split(" - ")[0]
+            # 2. Convert "TRN-1" -> "1"
+            trainer_id = raw_trn_id.replace("TRN-", "")
+            
+        agreed_trnfee = self.agreed_trainer_fee_var.get().strip()
 
         if mode == 'add':
-            success = insert_membership(member_name, phone, plan_name, start_date, formatted_date)
+            success = insert_membership(member_id, plan_id, start_date, status, agreed_plnfee, trainer_id, agreed_trnfee)
         else:
-            member_id = self.selected_row['member_id']
-            formatted_id = member_id.replace("MEM-","")
-            success = update_membership(formatted_id, member_name, phone, plan_name, start_date)
-        
-        if success:   # Insertion Successful
-            popup.destroy()
-            # reseting selected row
-            self.selected_row = None
+            # Safely grab the membership's unique key if needed, or use member_id depending on your schema
+            formatted_mem_id = self.selected_row['member_id']
+            clean_mem_id = str(formatted_mem_id).replace("MEM-","")
+            formatted_pln_id = self.selected_row['plan_id']
+            clean_pln_id = str(formatted_pln_id).replace("PLN-","")
 
+            success = update_membership(clean_mem_id, clean_pln_id, start_date, status, agreed_plnfee, trainer_id, agreed_trnfee)
+        
+        if success:
+            popup.destroy()
+            self.selected_row = None
             self.load_data()   
             self.selection_label.configure(text='No Row Selected')
-            self.edit_btn.configure(state= 'disabled')
+            self.edit_btn.configure(state='disabled')
         else:
-            messagebox.showerror(title="Error",
-                                 message=f"Could not {mode} membership. Check inputs or DB connection."
-                                )
+            messagebox.showerror(title="Error", message=f"Could not {mode} membership. Check inputs or DB connection.")
 
+    def is_float(self, value):
+        try:
+            float(value)
+            return True
+        except ValueError:
+            return False
 
     def _on_export(self):
         # Check if table has any rows
@@ -613,6 +732,18 @@ class MembershipsFrame(ctk.CTkFrame):
         
         export_to_excel(tree=self.table, default_filemember_name="memberships_export")
         
+
+    def calculate_membership_status(self, start_date, end_date):
+        from datetime import date
+
+        today = date.today()
+
+        if end_date < today:
+            return "Expired"
+        elif start_date > today:
+            return "Upcoming"
+        else:
+            return "Active"
 
 
 
