@@ -413,7 +413,7 @@ class PaymentsFrame(ctk.CTkFrame):
     def _open_form(self, mode):
         popup = ctk.CTkToplevel(self)
         popup.title("Add payment" if mode == "add" else "Edit payment")
-        popup.geometry('300x260')
+        popup.geometry('270x200')
         popup.resizable(False, False) 
         
         # Create StringVars here — they live as long as popup lives
