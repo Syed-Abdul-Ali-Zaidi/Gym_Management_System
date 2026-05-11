@@ -20,29 +20,47 @@ def get_all_payment():
     finally:
         conn.close()
 
-def search_payment(searchterm):
-    '''This will search payment(s) by thier MEMBER_ID or PLAN_ID with FULL details'''
+def search_payment(searchterm, status_active_filters, method_active_filters):
+    '''This will search payment(s) by thier MEMBER_ID or Member_Name or PLAN_ID with Filtes of Status and Method'''
     conn = get_db_connection()
     try:
-        cursor = conn.cursor(dictionary=True)
-        query = """
-            SELECT * FROM payment_view
-            WHERE member_id=%s OR plan_id=%s
-        """
+        if not status_active_filters:
+            return []
 
-        # To prevent the "int vs string" warning, we can safely pass the term
-        # or use 0 if it's not a digit for the ID column
+        status_placeholders = ", ".join(["%s"] * len(status_active_filters))
+        method_placeholders = ", ".join(["%s"] * len(method_active_filters))
+
+        # Prepare the NAME term (e.g., "Ali" finds "Ali Ahmed")
+        name_term = f'%{searchterm}%'
+
         if str(searchterm).isdigit():
             id_val = searchterm
         else:
             id_val = 0
 
-        cursor.execute(query,(id_val,id_val))
-        rows = cursor.fetchall() 
+        cursor = conn.cursor(dictionary=True)
+        if method_active_filters:
+            query = f"""
+                SELECT *
+                FROM payment_view
+                WHERE  payment_status IN ({status_placeholders}) AND (method IN ({method_placeholders}) OR method IS NULL) AND (member_id = %s OR member_name LIKE %s OR plan_id = %s)
+                ORDER by payment_status
+            """
+            cursor.execute(query, tuple(status_active_filters) + tuple(method_active_filters) + (id_val, name_term, id_val))
+        else:
+            query = f"""
+                SELECT *
+                FROM payment_view
+                WHERE  payment_status IN ({status_placeholders}) AND (member_id = %s OR member_name LIKE %s OR plan_id = %s)
+                ORDER by payment_status
+            """
+            cursor.execute(query, tuple(status_active_filters) + (id_val, name_term, id_val))
+
+        rows = cursor.fetchall()
         return rows
     except Exception as e:
-        print(f"Error fetching payments: {e}")
-        return []    # Return an empty list so the UI doesn't crash
+        print(f"Error searching memberships: {e}")
+        return []
     finally:
         conn.close()
 

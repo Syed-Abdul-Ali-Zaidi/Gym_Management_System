@@ -176,7 +176,11 @@ DATA_FRAME_UI = {
     "membership_active":      "#DCFCE7",   # soft green
     "membership_cancelled":      "#FEF3C7",   # soft yellow
     "membership_expired":      "#FEE2E2",   # soft red
-    "membership_upcoming":   "#E0E7FF"
+    "membership_upcoming":   "#E0E7FF",
+
+    # ── User status row colors ─────────────────────────────
+    "payment_paid":      "#DCFCE7",   # soft green
+    "payment_unpaid":    "#FEE2E2",   # soft red
 
 
     }
