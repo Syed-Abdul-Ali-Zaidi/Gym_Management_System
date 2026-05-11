@@ -381,7 +381,6 @@ class MembershipsFrame(ctk.CTkFrame):
         popup.resizable(False, False) 
         
         # ── 1. Fetch & Structure Lookups ──────────────────────────────────────
-        from services.membership_service import get_membership_form_data
         members_list, plans_list, trainers_list = get_membership_form_data()
 
        # 2. Build your specialized Lookups
@@ -730,7 +729,7 @@ class MembershipsFrame(ctk.CTkFrame):
             messagebox.showwarning(title="Empty", message="No data to export.")
             return
         
-        export_to_excel(tree=self.table, default_filemember_name="memberships_export")
+        export_to_excel(tree=self.table, default_filename="memberships_export")
         
 
     def calculate_membership_status(self, start_date, end_date):

@@ -234,15 +234,11 @@ class PlansFrame(ctk.CTkFrame):
         selected_filter = [filter for filter, var in self.filters_var.items() if var.get()]
 
         # if there is no SearchTerm, Load Normal Data
-        if not search_term:
-            rows = search_plan(search_term, selected_filter)
-            self._refresh_table(rows)
-        # Else search the Data and load it
-        else:
-            if search_term.startswith("PLN-"):
+        if search_term.startswith("PLN-"):
                 search_term = search_term.replace("PLN-","")
-            rows = search_plan(search_term, selected_filter)
-            self._refresh_table(rows)
+        rows = search_plan(search_term, selected_filter)
+        self._refresh_table(rows)
+         
 
         # Clear selection after every search
         self.selected_row = None

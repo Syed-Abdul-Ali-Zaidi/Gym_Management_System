@@ -328,17 +328,12 @@ class PaymentsFrame(ctk.CTkFrame):
 
 
         # if there is no SearchTerm, Load Normal Data
-        if not search_term:
-            rows = search_payment(search_term, selected_status_filters, selected_method_filters)
-            self._refresh_table(rows)
-        # Else search the Data and load it
-        else:
-            if search_term.startswith("MEM-"):
+        if search_term.startswith("MEM-"):
                 search_term = search_term.replace("MEM-","")
-            elif search_term.startswith("PLN-"):
-                search_term = search_term.replace("PLN-","")
-            rows = search_payment(search_term, selected_status_filters, selected_method_filters)
-            self._refresh_table(rows)
+
+ 
+        rows = search_payment(search_term, selected_status_filters, selected_method_filters)
+        self._refresh_table(rows)
 
         # Clear selection after every search
         self.selected_row = None
