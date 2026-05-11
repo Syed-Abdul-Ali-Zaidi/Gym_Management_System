@@ -243,15 +243,11 @@ class UsersFrame(ctk.CTkFrame):
         
 
         # if there is no SearchTerm, Load Normal Data
-        if not search_term:
-            rows = search_user(search_term, selected_filter)
-            self._refresh_table(rows)
-        # Else search the Data and load it
-        else:
-            if search_term.startswith("USR-"):
+        if search_term.startswith("USR-"):
                 search_term = search_term.replace("USR-","")
-            rows = search_user(search_term, selected_filter)
-            self._refresh_table(rows)
+        rows = search_user(search_term, selected_filter)
+        self._refresh_table(rows)
+          
 
         # Clear selection after every search
         self.selected_row = None
@@ -466,5 +462,5 @@ class UsersFrame(ctk.CTkFrame):
             messagebox.showwarning(title="Empty", message="No data to export.")
             return
         
-        export_to_excel(tree=self.table, default_fileusername="users_export")
+        export_to_excel(tree=self.table, default_filename="users_export")
 
