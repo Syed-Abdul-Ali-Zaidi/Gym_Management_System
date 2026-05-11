@@ -311,33 +311,43 @@ class ExpensesFrame(ctk.CTkFrame):
         # START MUTING TRACES
         self.is_updating_filters = True
         try:
-            # 1. Capture current states
-            is_paid_on = self.filters_s_var["Operational"].get()
-            any_method_on = self.filters_m_var['Utility_Bills'].get() or self.filters_m_var['Rent'].get() or self.filters_m_var['Marketing&Sales'].get() or self.filters_m_var['Maintenance&Supplies'].get()
-
-            # 2. Logic: If no sub-methods are checked, Paid MUST be off
-            if not any_method_on and is_paid_on:
-                self.filters_s_var['Operational'].set(False)
-                is_paid_on = False # Update local variable for the next check
-
-            # ── If Operational selected → enable Its types ───────
-            if self.filters_s_var["Operational"].get():
-                
-                # Only default-check both when they were previously disabled
-                # (i.e. Paid was just turned ON). Preserves user's individual picks.["Utility_Bills", "Rent", "Marketing&Sales", "Maintenance&Supplies"]
+            # 1. Get the current intent of the Master checkbox
+            operational_is_checked = self.filters_s_var["Operational"].get()
+            
+            # 2. If Master is ON -> Make sure sub-types are enabled
+            if operational_is_checked:
+                # If they were disabled, this was a fresh click on "Operational"
+                # so we turn everything on by default.
                 if self.ub_checkbox.cget("state") == "disabled":
                     self.filters_m_var["Utility_Bills"].set(True)
                     self.filters_m_var["Rent"].set(True)
                     self.filters_m_var["Marketing&Sales"].set(True)
                     self.filters_m_var["Maintenance&Supplies"].set(True)
 
+                # Ensure they are interactive
                 self.ub_checkbox.configure(state="normal")
                 self.rent_checkbox.configure(state="normal")
                 self.msales_checkbox.configure(state="normal")
                 self.msupplies_checkbox.configure(state="normal")
+                
+                # FINAL SAFETY: If the user manually unchecked every sub-type 
+                # WHILE Operational was already normal, then turn Operational OFF
+                any_sub_on = any([
+                    self.filters_m_var["Utility_Bills"].get(),
+                    self.filters_m_var["Rent"].get(),
+                    self.filters_m_var["Marketing&Sales"].get(),
+                    self.filters_m_var["Maintenance&Supplies"].get()
+                ])
+                
+                if not any_sub_on:
+                    self.filters_s_var['Operational'].set(False)
+                    self.ub_checkbox.configure(state="disabled")
+                    self.rent_checkbox.configure(state="disabled")
+                    self.msales_checkbox.configure(state="disabled")
+                    self.msupplies_checkbox.configure(state="disabled")
 
+            # 3. If Master is OFF -> Force everything else OFF and Disabled
             else:
-
                 self.filters_m_var["Utility_Bills"].set(False)
                 self.filters_m_var["Rent"].set(False)
                 self.filters_m_var["Marketing&Sales"].set(False)
@@ -348,15 +358,7 @@ class ExpensesFrame(ctk.CTkFrame):
                 self.msales_checkbox.configure(state="disabled")
                 self.msupplies_checkbox.configure(state="disabled")
 
-            # if No Operation type is Selected then Untick Operational check
-            if  not (self.filters_m_var['Utility_Bills'].get() or
-                    self.filters_m_var['Rent'].get() or
-                    self.filters_m_var['Marketing&Sales'].get() or
-                    self.filters_m_var['Maintenance&Supplies'].get()):
-                self.filters_s_var['Operational'].set(False)
-
         finally:
-            # END MUTING TRACES (Allow future searches)
             self.is_updating_filters = False
 
         # Getting Ticked Filters
@@ -374,7 +376,6 @@ class ExpensesFrame(ctk.CTkFrame):
             if var.get()
         ]
 
-        print('expense:',selected_exp_filters, '| operational:',selected_op_type_filters)
         # if there is no SearchTerm, Load Normal Data
         if search_term.startswith("EXP-"):
                 search_term = search_term.replace("EXP-","")
