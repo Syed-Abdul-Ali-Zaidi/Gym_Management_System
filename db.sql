@@ -62,7 +62,7 @@ CREATE TABLE `expense` (
 -- 6. OPERATIONAL_EXPENSE Table 
 CREATE TABLE `operational_expense` ( 
   `expense_id` INTEGER     NOT NULL, 
-  `category`   VARCHAR(50) NOT NULL CHECK (`category` IN ('Utility Bills', 'Rent', 'Marketing&Sales', 'Maintenance&Supplies', 'Extras')), 
+  `category`   VARCHAR(50) NOT NULL CHECK (`category` IN ('Utility_Bills', 'Rent', 'Marketing&Sales', 'Maintenance&Supplies')), 
  
   PRIMARY KEY (`expense_id`), 
   CONSTRAINT `oe_eid_fk` FOREIGN KEY (`expense_id`) 
