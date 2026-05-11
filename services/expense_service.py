@@ -34,35 +34,114 @@ def get_all_expense():
     finally:
         conn.close()
 
-def search_expense(searchterm):
-    """Search expense(s) by EXPENSE_ID, CATEGORY (Operational), or TRAINER_NAME (Salary)"""
+
+def get_trainer_data():
+    """Fetches clean, active data for the membership enrollment form.""" 
     conn = get_db_connection()
     try:
         cursor = conn.cursor(dictionary=True)
-        query = """
-            SELECT 
-                e.expense_id,
-                e.amount,
-                e.expense_date,
-                CASE 
-                    WHEN oe.expense_id IS NOT NULL THEN 'Operational'
-                    WHEN se.expense_id IS NOT NULL THEN 'Salary'
-                END AS type,
-                oe.category,
-                t.trainer_id,
-                t.name AS trainer_name
-            FROM expense e
-            LEFT JOIN operational_expense oe ON e.expense_id = oe.expense_id
-            LEFT JOIN salary_expense se      ON e.expense_id = se.expense_id
-            LEFT JOIN trainer t              ON se.trainer_id = t.trainer_id
-            WHERE e.expense_id = %s
-               OR oe.category LIKE %s
-               OR t.name LIKE %s
-        """
-        name_term = f'%{searchterm}%'
-        id_val = searchterm if str(searchterm).isdigit() else 0
+        
+    
+        # 3. Trainers: Only show staff currently available for assignment
+        cursor.execute("""
+            SELECT trainer_id, name, salary
+            FROM trainer 
+            WHERE status = 'Active'
+        """)
+        trainers = cursor.fetchall()
+        
+        return trainers
+        
+    except Exception as e:
+        # In a real app, log this to a file
+        print(f"Database error during trainer data fetching: {e}")
+        return []
+    finally:
+        # Connection always closes even if an error occurs
+        conn.close()
 
-        cursor.execute(query, (id_val, name_term, name_term))
+
+def search_expense(searchterm, selected_exp_filters, selected_op_type_filters):
+    """Search expense(s) by EXPENSE_ID, or TRAINER_NAME (Salary) with respect to filters"""
+    conn = get_db_connection()
+    try:
+        if not selected_exp_filters:
+            return []
+
+        exp_placeholders = ", ".join(["%s"] * len(selected_exp_filters))
+        op_type_placeholders = ", ".join(["%s"] * len(selected_op_type_filters))
+
+        # Prepare the NAME term (e.g., "Ali" finds "Ali Ahmed")
+        name_term = f'%{searchterm}%'
+
+        if str(searchterm).isdigit():
+            id_val = searchterm
+        else:
+            id_val = 0
+
+        cursor = conn.cursor(dictionary=True)
+        if selected_op_type_filters:
+            query = f"""
+                SELECT 
+                    e.expense_id,
+                    e.amount,
+                    e.expense_date,
+                    CASE 
+                        WHEN oe.expense_id IS NOT NULL THEN 'Operational'
+                        WHEN se.expense_id IS NOT NULL THEN 'Salary'
+                    END AS type,
+                    oe.category,
+                    t.trainer_id,
+                    t.name AS trainer_name
+                FROM expense e
+                LEFT JOIN operational_expense oe ON e.expense_id = oe.expense_id
+                LEFT JOIN salary_expense se      ON e.expense_id = se.expense_id
+                LEFT JOIN trainer t              ON se.trainer_id = t.trainer_id
+                WHERE 
+                    (
+                        CASE 
+                            WHEN oe.expense_id IS NOT NULL THEN 'Operational'
+                            WHEN se.expense_id IS NOT NULL THEN 'Salary'
+                        END
+                    ) IN ({exp_placeholders})
+                    AND (oe.category IN ({op_type_placeholders}) OR oe.category IS NULL)
+                    AND (e.expense_id = %s OR t.name LIKE %s OR t.name IS NULL)
+
+                ORDER BY e.expense_date
+            """
+            cursor.execute(query, tuple(selected_exp_filters) + tuple(selected_op_type_filters) + (id_val, name_term))
+
+        else:
+            query = f"""
+                SELECT 
+                    e.expense_id,
+                    e.amount,
+                    e.expense_date,
+                    CASE 
+                        WHEN oe.expense_id IS NOT NULL THEN 'Operational'
+                        WHEN se.expense_id IS NOT NULL THEN 'Salary'
+                    END AS type,
+                    oe.category,
+                    t.trainer_id,
+                    t.name AS trainer_name
+                FROM expense e
+                LEFT JOIN operational_expense oe ON e.expense_id = oe.expense_id
+                LEFT JOIN salary_expense se      ON e.expense_id = se.expense_id
+                LEFT JOIN trainer t              ON se.trainer_id = t.trainer_id
+                WHERE 
+                    (
+                        CASE 
+                            WHEN oe.expense_id IS NOT NULL THEN 'Operational'
+                            WHEN se.expense_id IS NOT NULL THEN 'Salary'
+                        END
+                    ) IN ({exp_placeholders})
+                    AND (e.expense_id = %s OR t.name LIKE %s OR t.name IS NULL)
+
+                ORDER BY e.expense_date
+            """
+            cursor.execute(query, tuple(selected_exp_filters) + (id_val, name_term))
+
+
         rows = cursor.fetchall()
         return rows
     except Exception as e:
@@ -91,7 +170,7 @@ def insert_operational(amount, expense_date, category):
             INSERT INTO operational_expense (expense_id, category)
             VALUES (%s, %s)
         """
-        if category not in ['Utility Bills', 'Rent', 'Marketing&Sales', 'Maintenance&Supplies', 'Extras']:
+        if category not in ['Utility_Bills', 'Rent', 'Marketing&Sales', 'Maintenance&Supplies']:
             category = 'Extras'
 
         cursor.execute(query, (expense_id, category))
@@ -143,7 +222,7 @@ def insert_salary(amount, expense_date, trainer_id):
         # Always close the pipe
         conn.close()
 
-def update(expense_id, amount, expense_date):
+def update_expense(expense_id, amount, expense_date):
     """Only base expense fields (amount, expense_date) are editable."""
     conn = get_db_connection()
     try:
@@ -164,7 +243,7 @@ def update(expense_id, amount, expense_date):
     finally:
         conn.close()
 
-def delete(expense_id: int):
+def delete_expense(expense_id: int):
     conn = get_db_connection()
     try:
         set_session_var(conn)
