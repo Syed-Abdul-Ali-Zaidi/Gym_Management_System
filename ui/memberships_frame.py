@@ -361,7 +361,7 @@ class MembershipsFrame(ctk.CTkFrame):
                 self.edit_btn.configure(state= 'disabled')
             else:
                 messagebox.showerror(title="Error",
-                                     message="Could not delete member.\nThey may have an active membership."
+                                     message="Could not delete membership.\nKindly Void its payment first."
                                     )
 
 
