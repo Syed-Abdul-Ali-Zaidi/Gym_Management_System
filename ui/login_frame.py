@@ -1,6 +1,7 @@
 import customtkinter as ctk
 from config.ui_config import LOGIN_UI
 from services.auth_service import login
+from PIL import Image
 
 class LoginFrame(ctk.CTkFrame):
     """
@@ -15,12 +16,30 @@ class LoginFrame(ctk.CTkFrame):
     """
 
     def __init__(self, parent, on_success):
-        # Initialize the CTkFrame with transparent bg so root window color shows
-        super().__init__(parent, fg_color="transparent")
+        # Initialize the CTkFrame with black bg so root window color shows
+        super().__init__(parent, fg_color="black")
 
         # Store the callback — we'll call it after successful login
         # Parameter on_success is a Reference of app.py func that destroys login page and opens MainApp
         self.on_success = on_success
+
+        # ── Background Image ─────────────────────────────
+        bg_image = Image.open("background.jpg")
+
+        self.bg_photo = ctk.CTkImage(
+            light_image=bg_image,
+            dark_image=bg_image,
+            size=(1400, 900)
+        )
+
+        self.bg_label = ctk.CTkLabel(
+            self,
+            image=self.bg_photo,
+            text=""
+        )
+
+        # Fill whole frame
+        self.bg_label.place(relx=0, rely=0, relwidth=1, relheight=1)
 
         # ── Center the card on screen ──────────────────────────────────────────
         # We make this frame's grid have 3 rows and 3 cols
@@ -55,9 +74,9 @@ class LoginFrame(ctk.CTkFrame):
         # ── Logo / Icon label (emoji as placeholder) ───────────────────────────
         ctk.CTkLabel(
             self.card,
-            text="🏋️",
+            text="     🏋️",
             font=ctk.CTkFont(family=LOGIN_UI['font_family'], size=LOGIN_UI['emoji_size'])
-        ).pack(pady=(40, 0), padx=(35,0))
+        ).pack(pady=(40, 0), anchor='center')
 
         # ── App title ──────────────────────────────────────────────────────────
         ctk.CTkLabel(
