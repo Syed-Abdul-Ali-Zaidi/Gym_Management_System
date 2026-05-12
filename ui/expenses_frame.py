@@ -122,10 +122,10 @@ class ExpensesFrame(ctk.CTkFrame):
         self.rent_checkbox.grid(row=1, column=0, padx=1, sticky=FORM_UI["entry_sticky"])
 
         self.msales_checkbox = ctk.CTkCheckBox(filter_m_frame, text='Marketing&Sales', font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size = 11), checkbox_height=15, checkbox_width=15, variable=self.filters_m_var['Marketing&Sales'])
-        self.msales_checkbox.grid(row=2, column=0, padx=1, sticky=FORM_UI["entry_sticky"])
+        self.msales_checkbox.grid(row=0, column=1, padx=1, sticky=FORM_UI["entry_sticky"])
 
         self.msupplies_checkbox = ctk.CTkCheckBox(filter_m_frame, text='Maintenance&Supplies', font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size = 11), checkbox_height=15, checkbox_width=15, variable=self.filters_m_var['Maintenance&Supplies'])
-        self.msupplies_checkbox.grid(row=3, column=0, padx=1, sticky=FORM_UI["entry_sticky"])
+        self.msupplies_checkbox.grid(row=1, column=1, padx=1, sticky=FORM_UI["entry_sticky"])
 
         # Attach trace directly to the checkbox variable
         self.filters_m_var['Utility_Bills'].trace_add("write", self._on_search)
@@ -161,7 +161,7 @@ class ExpensesFrame(ctk.CTkFrame):
             text_color=DATA_FRAME_UI['btn_text'],
             command=self._on_export
         )
-        self.export_btn.grid(row=1, column=5, padx=(4,6), pady=(1,6))
+        self.export_btn.grid(row=0, column=4, padx=(4,6), pady=(1,6))
 
 
     def _build_table(self):
@@ -290,7 +290,7 @@ class ExpensesFrame(ctk.CTkFrame):
                 row['amount'],
                 formatted_exp_date,
                 row['type'],
-                row['category'],
+                row['category'] or '',
                 formatted_trn_id,
                 row['trainer_name'] or ''),
                 tags= (tag,)
