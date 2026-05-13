@@ -132,6 +132,7 @@ DATA_FRAME_UI = {
     "btn_border":         1,
     "btn_hover":          APP_THEME["primary_color_hover"],
     "btn_text":           APP_THEME["primary_color"],
+    "divider_color":    APP_THEME["border_color"],
 
     # ── Style: Edit ───────────────────────────────────────────────────────────
     "edit_fg":            "transparent",
@@ -176,11 +177,17 @@ DATA_FRAME_UI = {
     "membership_active":      "#DCFCE7",   # soft green
     "membership_cancelled":      "#FEF3C7",   # soft yellow
     "membership_expired":      "#FEE2E2",   # soft red
-    "membership_upcoming":   "#E0E7FF",
+    "membership_upcoming":   "#E0E7FF",    # soft INdigo
 
-    # ── User status row colors ─────────────────────────────
+    # ── Payment status row colors ─────────────────────────────
     "payment_paid":      "#DCFCE7",   # soft green
     "payment_unpaid":    "#FEE2E2",   # soft red
+
+    # ── Expense Type row colors ─────────────────────────────
+    "expense_op":      "#FEF3C7",   # soft yellow
+    "expense_sal":    "#FEE2E2",   # soft indigo
+
+
 
 
     }
