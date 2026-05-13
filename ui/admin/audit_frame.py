@@ -35,7 +35,7 @@ class AuditFrame(ctk.CTkFrame):
         self.topbar_frame.grid_rowconfigure(0, weight=0)
         self.topbar_frame.grid_rowconfigure(1, weight=1)
         self.topbar_frame.grid_columnconfigure(0, weight=1)        # search entry stretches
-        self.topbar_frame.grid_columnconfigure((1, 2, 3, 4), weight=0)        # buttons fixed
+        self.topbar_frame.grid_columnconfigure((1, 2, 3, 4, 5, 6, 7), weight=0)        # buttons fixed
 
         # ── Search entry ───────────────────────────────────────────────
         ctk.CTkLabel(self.topbar_frame, text="Search by UserID or Username or TableName", font=ctk.CTkFont(size=10)).grid(row=0, column=0, padx=(6,4), pady=(1,0), sticky="w")
@@ -69,10 +69,13 @@ class AuditFrame(ctk.CTkFrame):
         )
         self.search_btn.grid(row=1, column=1, padx=4, pady=(1,6))
 
+       # ── Vertical Separatoe ───────────────────────────────────────────
+        self.create_vertical_separator(self.topbar_frame, column= 2)
+
         # ── Status Filter Frame ──────────────────────────────────────────
 
         # Create a small label above the checkboxes
-        ctk.CTkLabel(self.topbar_frame, text="Filter by Action:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=0, column=2, padx=(0,1), pady=(1,0), sticky="w")
+        ctk.CTkLabel(self.topbar_frame, text="Filter by Action:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=0, column=3, padx=4, pady=(1,0), sticky="w")
 
         # Creating a Dict of Filters where each filter name is a BooleanVar()
         filter_list = ["Insert", "Update", "Delete"]
@@ -82,7 +85,7 @@ class AuditFrame(ctk.CTkFrame):
             self.filters_var[filter] = ctk.BooleanVar(value=True)
         
         filter_frame = ctk.CTkFrame(self.topbar_frame, fg_color="transparent")
-        filter_frame.grid(row=1, column=2, padx=2, pady=0, sticky="nsew")
+        filter_frame.grid(row=1, column=3, padx=2, pady=0, sticky="nsew")
 
         # Automatically arrange checkboxes, 2 per col
         for i, filter in enumerate(filter_list):
@@ -95,17 +98,19 @@ class AuditFrame(ctk.CTkFrame):
             # Attach trace directly to the checkbox variable
             self.filters_var[filter].trace_add("write", self._on_search)
 
+       # ── Vertical Separatoe ───────────────────────────────────────────
+        self.create_vertical_separator(self.topbar_frame, column= 4)
 
         # ── Date Filter Section ──────────────────
         self.date_filter_frame = ctk.CTkFrame(self.topbar_frame, fg_color="transparent")
-        self.date_filter_frame.grid(row=0, column=3, rowspan=2, pady=(1,6))
+        self.date_filter_frame.grid(row=0, column=5, rowspan=2, pady=(1,6))
 
         # Variables
         self.from_date_var = ctk.StringVar()
         self.to_date_var = ctk.StringVar()
 
-        ctk.CTkLabel(self.date_filter_frame, text="From Date:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=0, column=0, sticky="w")
-        ctk.CTkLabel(self.date_filter_frame, text="To Date:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=1, column=0, sticky="w")       
+        ctk.CTkLabel(self.date_filter_frame, text="From Date:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=0, column=0, padx=4, pady=(1,0), sticky="w")
+        ctk.CTkLabel(self.date_filter_frame, text="To Date:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=1, column=0, padx=4, pady=(1,0), sticky="w")       
 
 
         # From Date Entry
@@ -129,7 +134,7 @@ class AuditFrame(ctk.CTkFrame):
             border_color=DATA_FRAME_UI['btn_text'],
             textvariable=self.to_date_var
         )
-        self.to_entry.grid(row=1, column=1, padx=1)
+        self.to_entry.grid(row=1, column=1, padx=1, pady=(2,0))
 
         # Apply Filter Button (Small icon version to save space)
         self.apply_date_btn = ctk.CTkButton(
@@ -146,6 +151,9 @@ class AuditFrame(ctk.CTkFrame):
         )
         self.apply_date_btn.grid(row=0, column=2, rowspan=2, padx=(1, 2))
 
+       # ── Vertical Separatoe ───────────────────────────────────────────
+        self.create_vertical_separator(self.topbar_frame, column= 6)
+
         # ── Export button ──────────────────────────────────────────────
         self.export_btn = ctk.CTkButton(
             self.topbar_frame,
@@ -159,7 +167,7 @@ class AuditFrame(ctk.CTkFrame):
             text_color=DATA_FRAME_UI['btn_text'],
             command=self._on_export
         )
-        self.export_btn.grid(row=1, column=4, padx=(4,6), pady=(1,6))
+        self.export_btn.grid(row=1, column=7, padx=(4,6), pady=(1,6))
 
 
     def _build_table(self):
@@ -328,7 +336,20 @@ class AuditFrame(ctk.CTkFrame):
         
         export_to_excel(tree=self.table, default_filename="audits_export")
 
-        
+    def create_vertical_separator(self, parent, column):
+        ctk.CTkFrame(
+            parent,
+            width=1,
+            height=1,
+            fg_color="gray"
+        ).grid(
+            row=0,
+            column=column,
+            rowspan=2,
+            padx=1,
+            pady=4,
+            sticky="ns"
+        )
 
     def _on_date_filter(self):
         """Called when user clicks the Filter button explicitly."""

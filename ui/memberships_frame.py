@@ -36,7 +36,7 @@ class MembershipsFrame(ctk.CTkFrame):
         self.topbar_frame.grid_rowconfigure(0, weight=0)
         self.topbar_frame.grid_rowconfigure(1, weight=1)
         self.topbar_frame.grid_columnconfigure(0, weight=1)        # search entry stretches
-        self.topbar_frame.grid_columnconfigure((1, 2, 3, 4), weight=0)        # buttons fixed
+        self.topbar_frame.grid_columnconfigure((1, 2, 3, 4, 5, 6), weight=0)        # buttons fixed
 
 
         # ── Search entry ───────────────────────────────────────────────
@@ -71,10 +71,13 @@ class MembershipsFrame(ctk.CTkFrame):
         )
         self.search_btn.grid(row=1, column=1, padx=4, pady=(1,6))
 
+       # ── Vertical Separatoe ───────────────────────────────────────────
+        self.create_vertical_separator(self.topbar_frame, column= 2)
+
         # ── start_date Filter Frame ──────────────────────────────────────────
 
         # Create a small label above the checkboxes
-        ctk.CTkLabel(self.topbar_frame, text="Filter by start_date:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=0, column=2, padx=4, pady=(1,0), sticky="w")
+        ctk.CTkLabel(self.topbar_frame, text="Filter by start_date:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=0, column=3, padx=4, pady=(1,0), sticky="w")
 
         # Creating a Dict of Filters where each filter member_name is a BooleanVar()
         filter_list = ['Active', 'Expired', 'Cancelled', 'Upcoming']
@@ -84,7 +87,7 @@ class MembershipsFrame(ctk.CTkFrame):
             self.filters_var[filter] = ctk.BooleanVar(value=True)
         
         filter_frame = ctk.CTkFrame(self.topbar_frame, fg_color="transparent")
-        filter_frame.grid(row=1, column=2, padx=2, pady=0, sticky="nsew")
+        filter_frame.grid(row=1, column=3, padx=2, pady=0, sticky="nsew")
 
         # Automatically arrange checkboxes, 2 per col
         for i, filter in enumerate(filter_list):
@@ -96,6 +99,9 @@ class MembershipsFrame(ctk.CTkFrame):
             
             # Attach trace directly to the checkbox variable
             self.filters_var[filter].trace_add("write", self._on_search)
+
+       # ── Vertical Separatoe ───────────────────────────────────────────
+        self.create_vertical_separator(self.topbar_frame, column= 4)
 
         # ── Add button ─────────────────────────────────────────────────
         self.add_btn = ctk.CTkButton(
@@ -110,7 +116,7 @@ class MembershipsFrame(ctk.CTkFrame):
             text_color=DATA_FRAME_UI['btn_text'],
             command=self._on_add
         )
-        self.add_btn.grid(row=1, column=3, padx=4, pady=(1,6))
+        self.add_btn.grid(row=1, column=5, padx=4, pady=(1,6))
 
         # ── Export button ──────────────────────────────────────────────
         self.export_btn = ctk.CTkButton(
@@ -125,7 +131,7 @@ class MembershipsFrame(ctk.CTkFrame):
             text_color=DATA_FRAME_UI['btn_text'],
             command=self._on_export
         )
-        self.export_btn.grid(row=1, column=4, padx=(4,6), pady=(1,6))
+        self.export_btn.grid(row=1, column=6, padx=(4,6), pady=(1,6))
 
 
     def _build_table(self):
@@ -744,7 +750,20 @@ class MembershipsFrame(ctk.CTkFrame):
         else:
             return "Active"
 
-
+    def create_vertical_separator(self, parent, column):
+        ctk.CTkFrame(
+            parent,
+            width=1,
+            height=1,
+            fg_color="gray"
+        ).grid(
+            row=0,
+            column=column,
+            rowspan=2,
+            padx=1,
+            pady=4,
+            sticky="ns"
+        )
 
 
 
