@@ -2,8 +2,7 @@ import customtkinter as ctk
 from tkinter import ttk, messagebox
 from config.ui_config import DATA_FRAME_UI, FORM_UI
 from services.audit_service import (
-    get_all_audit, search_audit,
-    get_by_date_audit
+    get_all_audit, search_audit
 )
 from ui.excel_file_maker import export_to_excel
 
@@ -18,6 +17,7 @@ class AuditFrame(ctk.CTkFrame):
 
         # ── Instance variables ─────────────────────────────
         self.selected_row = None  # stores selected row as dict
+        self.correct_dates_flag = False
 
         # ── Build UI ───────────────────────────────────────
         self._build_topbar()
@@ -72,7 +72,7 @@ class AuditFrame(ctk.CTkFrame):
         # ── Status Filter Frame ──────────────────────────────────────────
 
         # Create a small label above the checkboxes
-        ctk.CTkLabel(self.topbar_frame, text="Filter by Action:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=0, column=2, padx=4, pady=(1,0), sticky="w")
+        ctk.CTkLabel(self.topbar_frame, text="Filter by Action:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=0, column=2, padx=(0,1), pady=(1,0), sticky="w")
 
         # Creating a Dict of Filters where each filter name is a BooleanVar()
         filter_list = ["Insert", "Update", "Delete"]
@@ -90,55 +90,43 @@ class AuditFrame(ctk.CTkFrame):
             col_idx = i // 2   # Integer division: 0, 0, 1, 1
             
             chk = ctk.CTkCheckBox(filter_frame, text=filter, font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size = 11), checkbox_height=15, checkbox_width=15, variable=self.filters_var[filter])
-            chk.grid(row=row_idx, column=col_idx, padx=1, sticky=FORM_UI["entry_sticky"])
+            chk.grid(row=row_idx, column=col_idx, padx=(1,0), sticky=FORM_UI["entry_sticky"])
             
             # Attach trace directly to the checkbox variable
             self.filters_var[filter].trace_add("write", self._on_search)
 
-        # # ── Add button ─────────────────────────────────────────────────
-        # self.add_btn = ctk.CTkButton(
-        #     self.topbar_frame,
-        #     text="+ Add New",
-        #     width=DATA_FRAME_UI['topbar_btn_width'],
-        #     height=DATA_FRAME_UI['btn_height'],
-        #     font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
-        #     fg_color=DATA_FRAME_UI['btn_fg'],
-        #     border_width=DATA_FRAME_UI['btn_border'],
-        #     hover_color=DATA_FRAME_UI['btn_hover'],
-        #     text_color=DATA_FRAME_UI['btn_text'],
-        #     command=self._on_add
-        # )
-        # self.add_btn.grid(row=1, column=2, padx=4, pady=(1,6))
 
-        # ── Date Filter Section (Replaces Add Button) ──────────────────
+        # ── Date Filter Section ──────────────────
         self.date_filter_frame = ctk.CTkFrame(self.topbar_frame, fg_color="transparent")
-        self.date_filter_frame.grid(row=0, column=3, rowspan=2, padx=2, pady=(1,6))
+        self.date_filter_frame.grid(row=0, column=3, rowspan=2, pady=(1,6))
 
         # Variables
         self.from_date_var = ctk.StringVar()
         self.to_date_var = ctk.StringVar()
 
-        ctk.CTkLabel(self.date_filter_frame, text="From Date:", font=ctk.CTkFont(size=12)).grid(row=0, column=0, padx=1)
-        ctk.CTkLabel(self.date_filter_frame, text="To Date:", font=ctk.CTkFont(size=12)).grid(row=1, column=0, padx=1)       
+        ctk.CTkLabel(self.date_filter_frame, text="From Date:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=0, column=0, sticky="w")
+        ctk.CTkLabel(self.date_filter_frame, text="To Date:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=10)).grid(row=1, column=0, sticky="w")       
 
 
         # From Date Entry
         self.from_entry = ctk.CTkEntry(
             self.date_filter_frame,
-            width=100,
-            height=DATA_FRAME_UI['btn_height'],
-            placeholder_text="DD-MM-YYYY",
+            height=DATA_FRAME_UI['btn_height']-10,
+            width=DATA_FRAME_UI['topbar_btn_width'],
+            border_width=1,
+            border_color=DATA_FRAME_UI['btn_text'],
             textvariable=self.from_date_var
         )
-        self.from_entry.grid(row=0, column=1, padx=1)
+        self.from_entry.grid(row=0, column=1, padx=1, pady=(0,2))
 
 
         # To Date Entry
         self.to_entry = ctk.CTkEntry(
             self.date_filter_frame,
-            width=100,
-            height=DATA_FRAME_UI['btn_height'],
-            placeholder_text="DD-MM-YYYY",
+            height=DATA_FRAME_UI['btn_height']-10,
+            width=DATA_FRAME_UI['topbar_btn_width'],
+            border_width=1,
+            border_color=DATA_FRAME_UI['btn_text'],
             textvariable=self.to_date_var
         )
         self.to_entry.grid(row=1, column=1, padx=1)
@@ -147,13 +135,16 @@ class AuditFrame(ctk.CTkFrame):
         self.apply_date_btn = ctk.CTkButton(
             self.date_filter_frame,
             text="📅 Filter",
-            width=70,
-            height=DATA_FRAME_UI['btn_height'],
+            width=DATA_FRAME_UI['topbar_btn_width'],
+            height=DATA_FRAME_UI['btn_height']-10,
+            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
             fg_color=DATA_FRAME_UI['btn_fg'],
+            border_width=DATA_FRAME_UI['btn_border'],
             hover_color=DATA_FRAME_UI['btn_hover'],
+            text_color=DATA_FRAME_UI['btn_text'],
             command=self._on_date_filter
         )
-        self.apply_date_btn.grid(row=0, column=3, padx=(1, 2))
+        self.apply_date_btn.grid(row=0, column=2, rowspan=2, padx=(1, 2))
 
         # ── Export button ──────────────────────────────────────────────
         self.export_btn = ctk.CTkButton(
@@ -264,28 +255,51 @@ class AuditFrame(ctk.CTkFrame):
             
 
 
+    def _on_search(self, *args):
+        """Called by: search text change, filter checkboxes change, OR date filter button."""
+        search_term = self.searchbar_var.get().strip().upper()
+        if search_term.startswith("USR-"):
+            search_term = search_term.replace("USR-", "")
 
+        # ── Get action filters ─────────────────────────────────
+        selected_filter = [f for f, var in self.filters_var.items() if var.get()]
 
-    def _on_search(self,  *args):
-        search_term = self.searchbar_var.get().strip()
-        search_term = search_term.upper()
-
-        # Getting Ticked Filters
-        # Create a list of the names of all checked status
-        selected_filter = [filter for filter, var in self.filters_var.items() if var.get()]
+        # ── Try to parse dates (silently fail if invalid) ──────
+        from_date = None
+        to_date = None
         
-        # if there is no SearchTerm, Load Normal Data
-        if not search_term:
-            rows = search_audit(search_term, selected_filter)
-            self._refresh_table(rows)
-        # Else search the Data and load it
-        else:
-            if search_term.startswith("USR-"):
-                search_term = search_term.replace("USR-","")
-            rows = search_audit(search_term, selected_filter)
-            self._refresh_table(rows)
+        from_str = self.from_date_var.get().strip()
+        to_str = self.to_date_var.get().strip()
+        
+        # Only apply date filter if BOTH dates are provided
+        if from_str and to_str:
+            try:
+                from datetime import datetime
+                from_dt = datetime.strptime(from_str, "%d-%m-%Y")
+                to_dt = datetime.strptime(to_str, "%d-%m-%Y")
 
-        # Clear selection after every search
+                if from_dt > to_dt:
+                    messagebox.showwarning(
+                        "Invalid Date Range",
+                        "From date must be before or equal to To date."
+                    )
+                    return
+                
+                # Convert to MySQL format
+                from_date = from_dt.strftime("%Y-%m-%d")
+                to_date = to_dt.strftime("%Y-%m-%d")
+            except ValueError:
+                messagebox.showwarning(
+                "Incomplete Date Range",
+                "Please provide both From and To dates, or leave both empty."
+                )
+                return
+
+        # ── Execute search ─────────────────────────────────────
+        rows = search_audit(search_term, selected_filter, start_date=from_date, end_date=to_date)
+        self._refresh_table(rows)
+        
+        # Clear selection
         self.selected_row = None
         self.selection_label.configure(text='No row selected')
 
@@ -314,34 +328,49 @@ class AuditFrame(ctk.CTkFrame):
         
         export_to_excel(tree=self.table, default_filename="audits_export")
 
-
-    # def _on_add(self):
-    #     pass
         
 
     def _on_date_filter(self):
-        from_date = self.from_date_var.get().strip()
-        to_date = self.to_date_var.get().strip()
-
-        # 1. Basic validation: If both are empty, just reload all
-        if not from_date and not to_date:
-            self.load_data()
-            return
-
-        # 2. Simple format check (you can make this more robust with datetime)
-        if len(from_date) != 10 or len(to_date) != 10:
-            messagebox.showwarning("Invalid Date", "Please use DD-MM-YYYY format.")
-            return
-
-        # 3. Call service
-        # Note: Your service 'get_by_date_audit' should handle the DB query
-        rows = get_by_date_audit(from_date, to_date)
+        """Called when user clicks the Filter button explicitly."""
+        from_str = self.from_date_var.get().strip()
+        to_str = self.to_date_var.get().strip()
         
-        if rows is not None:
-            self._refresh_table(rows)
-            self.selection_label.configure(text=f"Showing results from {from_date} to {to_date}")
+        # ── Case 1: Both empty → Clear filter ──────────────────
+        if not from_str and not to_str:
+            self._on_search()  # Search without date filter
+            return
+        
+
+        # ── Case 2: Both provided → Validate ───────────────────
+        if from_str and to_str:
+            try:
+                from datetime import datetime
+                from_dt = datetime.strptime(from_str, "%d-%m-%Y")
+                to_dt = datetime.strptime(to_str, "%d-%m-%Y")
+                
+                # Verify range logic
+                if from_dt > to_dt:
+                    messagebox.showwarning(
+                        "Invalid Date Range",
+                        "From date must be before or equal to To date."
+                    )
+                    return
+                
+                # Valid dates - trigger search
+                self._on_search()
+                
+            except ValueError:
+                messagebox.showwarning(
+                    "Invalid Date Format",
+                    "Please use DD-MM-YYYY format.\nExample: 01-01-2024"
+                )
+
+        # ── Case 3: Only one provided → Error ──────────────────
         else:
-            messagebox.showerror("Error", "Could not fetch data for these dates.")
-
-
-            
+            messagebox.showwarning(
+                "Incomplete Date Range",
+                "Please provide both From and To dates, or leave both empty."
+            )
+            return
+    
+                
