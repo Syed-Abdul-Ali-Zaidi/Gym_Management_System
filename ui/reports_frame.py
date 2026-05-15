@@ -9,10 +9,19 @@ from ui.excel_file_maker import export_to_excel
 
 class ReportsFrame(ctk.CTkFrame):
     def __init__(self, content_area):
-        super().__init__(content_area, fg_color="transparent")
+        super().__init__(content_area, fg_color=DATA_FRAME_UI['content_bg_color'])
 
         # Tabview
-        self.tabview = ctk.CTkTabview(self)
+        self.tabview = ctk.CTkTabview(self,
+                            corner_radius=10,
+                            border_width=1,
+                            fg_color="transparent",          # main body color
+                            segmented_button_selected_color="#E1EEF9",
+                            segmented_button_selected_hover_color=DATA_FRAME_UI['btn_hover'],
+                            segmented_button_unselected_color="white",
+                            segmented_button_unselected_hover_color=DATA_FRAME_UI['btn_hover'],
+                            text_color=DATA_FRAME_UI['btn_text'],
+                            text_color_disabled="gray")
         # self.tabview.pack(fill="both", expand=True, padx=20, pady=(0, 20))
         self.tabview.grid(row=0, column=0, sticky='nsew')
 
@@ -47,10 +56,10 @@ class ReportsFrame(ctk.CTkFrame):
         ctk.CTkLabel(tab, text="📊 Membership Plans Performance", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']+5)).grid(row=0, column=0, padx=6, pady=4, sticky="ns")
 
         # ── TABLE ───────────────────────────────────────────────
-        cols   = ('plan_name', 'active_count', 'revenue')
-        heads  = ('Plan Name', 'Active Memberships', 'Revenue')
-        widths = (200, 200, 200)
-        anchs  = ('center', 'center', 'center')
+        cols   = ('plan_id','plan_name', 'active_count', 'revenue')
+        heads  = ('Plan ID','Plan Name', 'Paid Active Memberships', 'Revenue')
+        widths = (200, 300, 300, 200)
+        anchs  = ('center', 'center', 'center', 'center')
 
         self.plan_table = self._build_table(parent=tab, columns=cols, headers=heads, widths=widths, anchors=anchs)
 
@@ -59,13 +68,10 @@ class ReportsFrame(ctk.CTkFrame):
         self.action_bar.grid(row=2, column=0, sticky="ew", padx=DATA_FRAME_UI['padding_x'], pady=DATA_FRAME_UI['padding_y'])
 
         self.action_bar.grid_columnconfigure(0, weight=1)
-        self.action_bar.grid_columnconfigure(1, weight=0)
-
-        self.selection_label = ctk.CTkLabel(self.action_bar, text='No Row Selected')
-        self.selection_label.grid(row=0, column=0, sticky="w", padx=10, pady=8)
+        self.action_bar.grid_columnconfigure((1, 2), weight=0)
 
         # ── Export button ────────────────────────────────────────
-        self.export_btn = ctk.CTkButton(
+        export_btn = ctk.CTkButton(
             self.action_bar,
             text="📤 Export Plans Report",
             width=DATA_FRAME_UI['topbar_btn_width'],
@@ -77,7 +83,22 @@ class ReportsFrame(ctk.CTkFrame):
             text_color=DATA_FRAME_UI['btn_text'],
             command=lambda: self._on_export(self.plan_table, "Plans_Report")
         )
-        self.export_btn.grid(row=0, column=1, padx=(4, 8), pady=8)
+        export_btn.grid(row=0, column=1, padx=4, pady=8)
+
+        # ── Refresh button ───────────────────────────────────────
+        refresh_btn = ctk.CTkButton(
+            self.action_bar,
+            text="⭮ Refresh",
+            width=DATA_FRAME_UI['topbar_btn_width'],
+            height=DATA_FRAME_UI['btn_height'],
+            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
+            fg_color=DATA_FRAME_UI['btn_fg'],
+            border_width=DATA_FRAME_UI['btn_border'],
+            hover_color=DATA_FRAME_UI['btn_hover'],
+            text_color=DATA_FRAME_UI['btn_text'],
+            command=self._on_refresh
+        )
+        refresh_btn.grid(row=0, column=2, padx=(4, 8), pady=8)
 
         # Load Data
         self._load_plan_data()
@@ -98,7 +119,7 @@ class ReportsFrame(ctk.CTkFrame):
         # ── TABLE ───────────────────────────────────────────────
         cols =  ('trainer_id', 'name', 'salary', 'assigned_members', 'trainer_revenue')
         heads = ('Trainer ID', 'Trainer Name', 'Salary', 'Assigned Member', 'Revenue Generated')
-        widths = (200, 200, 200, 200, 200)
+        widths = (200, 300, 200, 200, 300)
         anchs = ('center', 'w', 'center', 'center', 'center')
 
         self.trainer_table = self._build_table(parent=tab, columns=cols, headers=heads, widths=widths, anchors=anchs)
@@ -108,13 +129,10 @@ class ReportsFrame(ctk.CTkFrame):
         self.action_bar.grid(row=2, column=0, sticky="ew", padx=DATA_FRAME_UI['padding_x'], pady=DATA_FRAME_UI['padding_y'])
 
         self.action_bar.grid_columnconfigure(0, weight=1)
-        self.action_bar.grid_columnconfigure(1, weight=0)
-
-        self.selection_label = ctk.CTkLabel(self.action_bar, text='No Row Selected')
-        self.selection_label.grid(row=0, column=0, sticky="w", padx=10, pady=8)
+        self.action_bar.grid_columnconfigure((1, 2), weight=0)
 
         # ── Export button ────────────────────────────────────────
-        self.export_btn = ctk.CTkButton(
+        export_btn = ctk.CTkButton(
             self.action_bar,
             text="📤 Export Trianers Report",
             width=DATA_FRAME_UI['topbar_btn_width'],
@@ -126,7 +144,22 @@ class ReportsFrame(ctk.CTkFrame):
             text_color=DATA_FRAME_UI['btn_text'],
             command=lambda: self._on_export(self.trainer_table, "Trainers_Report")
         )
-        self.export_btn.grid(row=0, column=1, padx=(4, 8), pady=8)
+        export_btn.grid(row=0, column=1, padx=4, pady=8)
+
+        # ── Refresh button ───────────────────────────────────────
+        refresh_btn = ctk.CTkButton(
+            self.action_bar,
+            text="⭮ Refresh",
+            width=DATA_FRAME_UI['topbar_btn_width'],
+            height=DATA_FRAME_UI['btn_height'],
+            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
+            fg_color=DATA_FRAME_UI['btn_fg'],
+            border_width=DATA_FRAME_UI['btn_border'],
+            hover_color=DATA_FRAME_UI['btn_hover'],
+            text_color=DATA_FRAME_UI['btn_text'],
+            command=self._on_refresh
+        )
+        refresh_btn.grid(row=0, column=2, padx=(4, 8), pady=8)
 
         # Load Data
         self._load_trainer_data()
@@ -142,12 +175,12 @@ class ReportsFrame(ctk.CTkFrame):
         tab.grid_columnconfigure(0, weight=1)
 
         # ── LABEL ───────────────────────────────────────────────
-        ctk.CTkLabel(tab, text="📊 Revenue Analysis", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']+5)).grid(row=0, column=0, padx=6, pady=4, sticky="ns")
+        ctk.CTkLabel(tab, text="💰 Revenue Analysis", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']+5)).grid(row=0, column=0, padx=6, pady=4, sticky="ns")
 
         # ── TABLE ───────────────────────────────────────────────
         cols =  ('year', 'month', 'total_revenue', 'no_of_transaction')
         heads = ('Year', 'Month', 'Total Revenue', 'Number of Transactions')
-        widths = (200, 200, 200, 200)
+        widths = (200, 200, 200, 300)
         anchs = ('center', 'center', 'center', 'center')
 
         self.revenue_table = self._build_table(parent=tab, columns=cols, headers=heads, widths=widths, anchors=anchs)
@@ -157,13 +190,10 @@ class ReportsFrame(ctk.CTkFrame):
         self.action_bar.grid(row=2, column=0, sticky="ew", padx=DATA_FRAME_UI['padding_x'], pady=DATA_FRAME_UI['padding_y'])
 
         self.action_bar.grid_columnconfigure(0, weight=1)
-        self.action_bar.grid_columnconfigure(1, weight=0)
-
-        self.selection_label = ctk.CTkLabel(self.action_bar, text='No Row Selected')
-        self.selection_label.grid(row=0, column=0, sticky="w", padx=10, pady=8)
+        self.action_bar.grid_columnconfigure((1, 2), weight=0)
 
         # ── Export button ────────────────────────────────────────
-        self.export_btn = ctk.CTkButton(
+        export_btn = ctk.CTkButton(
             self.action_bar,
             text="📤 Export Revenue Report",
             width=DATA_FRAME_UI['topbar_btn_width'],
@@ -175,7 +205,22 @@ class ReportsFrame(ctk.CTkFrame):
             text_color=DATA_FRAME_UI['btn_text'],
             command=lambda: self._on_export(self.revenue_table, "Revenue_Report")
         )
-        self.export_btn.grid(row=0, column=1, padx=(4, 8), pady=8)
+        export_btn.grid(row=0, column=1, padx=4, pady=8)
+
+        # ── Refresh button ───────────────────────────────────────
+        refresh_btn = ctk.CTkButton(
+            self.action_bar,
+            text="⭮ Refresh",
+            width=DATA_FRAME_UI['topbar_btn_width'],
+            height=DATA_FRAME_UI['btn_height'],
+            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
+            fg_color=DATA_FRAME_UI['btn_fg'],
+            border_width=DATA_FRAME_UI['btn_border'],
+            hover_color=DATA_FRAME_UI['btn_hover'],
+            text_color=DATA_FRAME_UI['btn_text'],
+            command=self._on_refresh
+        )
+        refresh_btn.grid(row=0, column=2, padx=(4, 8), pady=8)
 
         # Load Data
         self._load_revenue_data()
@@ -191,12 +236,12 @@ class ReportsFrame(ctk.CTkFrame):
         tab.grid_columnconfigure(0, weight=1)
 
         # ── LABEL ───────────────────────────────────────────────
-        ctk.CTkLabel(tab, text="📊 Expense Analysis", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']+5)).grid(row=0, column=0, padx=6, pady=4, sticky="ns")
+        ctk.CTkLabel(tab, text="💸 Expense Analysis", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']+5)).grid(row=0, column=0, padx=6, pady=4, sticky="ns")
 
         # ── TABLE ───────────────────────────────────────────────
         cols =  ('year', 'month', 'total_expense', 'no_of_transaction')
         heads = ('Year', 'Month', 'Total Expense', 'Number of Transactions')
-        widths = (200, 200, 200, 200)
+        widths = (200, 200, 200, 300)
         anchs = ('center', 'center', 'center', 'center')
 
         self.expense_table = self._build_table(parent=tab, columns=cols, headers=heads, widths=widths, anchors=anchs)
@@ -206,13 +251,10 @@ class ReportsFrame(ctk.CTkFrame):
         self.action_bar.grid(row=2, column=0, sticky="ew", padx=DATA_FRAME_UI['padding_x'], pady=DATA_FRAME_UI['padding_y'])
 
         self.action_bar.grid_columnconfigure(0, weight=1)
-        self.action_bar.grid_columnconfigure(1, weight=0)
-
-        self.selection_label = ctk.CTkLabel(self.action_bar, text='No Row Selected')
-        self.selection_label.grid(row=0, column=0, sticky="w", padx=10, pady=8)
+        self.action_bar.grid_columnconfigure((1, 2), weight=0)
 
         # ── Export button ────────────────────────────────────────
-        self.export_btn = ctk.CTkButton(
+        export_btn = ctk.CTkButton(
             self.action_bar,
             text="📤 Export Expense Report",
             width=DATA_FRAME_UI['topbar_btn_width'],
@@ -224,7 +266,22 @@ class ReportsFrame(ctk.CTkFrame):
             text_color=DATA_FRAME_UI['btn_text'],
             command=lambda: self._on_export(self.expense_table, "Expense_Report")
         )
-        self.export_btn.grid(row=0, column=1, padx=(4, 8), pady=8)
+        export_btn.grid(row=0, column=1, padx=4, pady=8)
+
+        # ── Refresh button ───────────────────────────────────────
+        refresh_btn = ctk.CTkButton(
+            self.action_bar,
+            text="⭮ Refresh",
+            width=DATA_FRAME_UI['topbar_btn_width'],
+            height=DATA_FRAME_UI['btn_height'],
+            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
+            fg_color=DATA_FRAME_UI['btn_fg'],
+            border_width=DATA_FRAME_UI['btn_border'],
+            hover_color=DATA_FRAME_UI['btn_hover'],
+            text_color=DATA_FRAME_UI['btn_text'],
+            command=self._on_refresh
+        )
+        refresh_btn.grid(row=0, column=2, padx=(4, 8), pady=8)
 
         # Load Data
         self._load_expense_data()
@@ -254,13 +311,10 @@ class ReportsFrame(ctk.CTkFrame):
         self.action_bar.grid(row=2, column=0, sticky="ew", padx=DATA_FRAME_UI['padding_x'], pady=DATA_FRAME_UI['padding_y'])
 
         self.action_bar.grid_columnconfigure(0, weight=1)
-        self.action_bar.grid_columnconfigure(1, weight=0)
-
-        self.selection_label = ctk.CTkLabel(self.action_bar, text='No Row Selected')
-        self.selection_label.grid(row=0, column=0, sticky="w", padx=10, pady=8)
+        self.action_bar.grid_columnconfigure((1, 2), weight=0)
 
         # ── Export button ────────────────────────────────────────
-        self.export_btn = ctk.CTkButton(
+        export_btn = ctk.CTkButton(
             self.action_bar,
             text="📤 Export Profit Report",
             width=DATA_FRAME_UI['topbar_btn_width'],
@@ -272,7 +326,22 @@ class ReportsFrame(ctk.CTkFrame):
             text_color=DATA_FRAME_UI['btn_text'],
             command=lambda: self._on_export(self.profit_table, "Profit_Report")
         )
-        self.export_btn.grid(row=0, column=1, padx=(4, 8), pady=8)
+        export_btn.grid(row=0, column=1, padx=4, pady=8)
+
+        # ── Refresh button ───────────────────────────────────────
+        refresh_btn = ctk.CTkButton(
+            self.action_bar,
+            text="⭮ Refresh",
+            width=DATA_FRAME_UI['topbar_btn_width'],
+            height=DATA_FRAME_UI['btn_height'],
+            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
+            fg_color=DATA_FRAME_UI['btn_fg'],
+            border_width=DATA_FRAME_UI['btn_border'],
+            hover_color=DATA_FRAME_UI['btn_hover'],
+            text_color=DATA_FRAME_UI['btn_text'],
+            command=self._on_refresh
+        )
+        refresh_btn.grid(row=0, column=2, padx=(4, 8), pady=8)
 
         # Load Data
         self._load_profit_data()
@@ -298,6 +367,8 @@ class ReportsFrame(ctk.CTkFrame):
                 tag = 'odd'
             count += 1
 
+            plan_id = row['plan_id']
+            formatted_pln_id = f'PLN-{plan_id}'
             plan_name = row['plan_name']
             active_count = row['active_count']
             
@@ -306,6 +377,7 @@ class ReportsFrame(ctk.CTkFrame):
             
             # The order in 'values' MUST match the order of 'cols' in your _build function
             self.plan_table.insert(parent='', index='end', values=(
+                formatted_pln_id,
                 plan_name, 
                 active_count, 
                 formatted_expense),
@@ -347,7 +419,7 @@ class ReportsFrame(ctk.CTkFrame):
         
             # The order in 'values' MUST match the order of 'cols' in your _build function
             self.trainer_table.insert(parent='', index='end', values=(
-                trainer_id, 
+                formatted_trn_id, 
                 trianer_name, 
                 formatted_salary,
                 assigned_members,
@@ -477,52 +549,13 @@ class ReportsFrame(ctk.CTkFrame):
                 tags= (tag,)
             )
                 
-        # def _refresh_table(self,rows):
-    #     # Deletes existing rows
-    #     self.table.delete(*self.table.get_children())
-        
-    #     # Creating Stripped row tags
-    #     self.table.tag_configure('Active', background=DATA_FRAME_UI['report_active'])
-    #     self.table.tag_configure('Inactive', background=DATA_FRAME_UI['report_inactive'])
+    def _on_refresh(self):
 
-    #     # inserts New Data
-    #     for row in rows:
-    #         tag = row['status']
-
-    #         formatted_id = f'MEM-{row['report_id']}'
-    #         formatted_date = row['join_date'].strftime("%d-%m-%Y")
-
-    #         self.table.insert(parent='', index= 'end', values=(
-    #             formatted_id,
-    #             row['name'],
-    #             row['phone_no'] or '',  # if there is a NULL value Tree will show None so replace it with ""
-    #             row['gender'],
-    #             row['status'],
-    #             formatted_date),
-    #             tags= (tag,)
-    #         )
-            
-
-
-
-    # def _on_row_select(self, event):
-    #     column_names = ['report_id', 'name', 'phone_no', 'gender', 'status', 'join_date']
-    #     selected = self.table.selection()
-
-    #     if not selected:
-    #         self.selection_label.configure(text='No Row Selected')
-    #         return None
-        
-    #     item_id = selected[0]
-    #     values = self.table.item(item_id)["values"]
-    #     self.selected_row = dict(zip(column_names, values))
-
-    #     # Updating the Selection Label
-    #     self.selection_label.configure(text= f'ID: {self.selected_row['report_id']} | Name: {self.selected_row['name']}')
-
-    #     # Enabling the Edit botton
-    #     self.edit_btn.configure(state='normal')
-
+        self._load_plan_data()
+        self._load_trainer_data()
+        self._load_revenue_data()
+        self._load_expense_data()
+        self._load_profit_data()
 
     def _on_export(self, table, filename):
         # Check if table has any rows

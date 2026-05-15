@@ -32,6 +32,9 @@ APP_THEME = {
     # ── Sidebar ───────────────────────────────────────────────────────────────
     "dark_bg":             "#0d1b2a",
     "border_color":        "#1a2e45",
+
+    # ── Sidebar ───────────────────────────────────────────────────────────────
+    "bg_color":      "#F3FAFF"
 }
 
 # ── Global App Config ──────────────────────────────────────────────────────────
@@ -132,7 +135,8 @@ DATA_FRAME_UI = {
     "btn_border":         1,
     "btn_hover":          APP_THEME["primary_color_hover"],
     "btn_text":           APP_THEME["primary_color"],
-    "divider_color":    APP_THEME["border_color"],
+    "divider_color":      APP_THEME["border_color"],
+    "content_bg_color":   APP_THEME['bg_color'],
 
     # ── Style: Edit ───────────────────────────────────────────────────────────
     "edit_fg":            "transparent",
@@ -148,8 +152,8 @@ DATA_FRAME_UI = {
     "error_text":         APP_THEME["danger_red"],
 
     # ── Table strips ──────────────────────────────────────────────────────────
-    "even":               "#f5f5f5",
-    "odd":                "#ffffff",
+    "even":               "#eeeeee",
+    "odd":                "#f5f5f5",
 
     # ── Trainer status row colors ─────────────────────────────
     "trainer_active":      "#DCFCE7",   # soft green
@@ -185,7 +189,11 @@ DATA_FRAME_UI = {
 
     # ── Expense Type row colors ─────────────────────────────
     "expense_op":      "#FEF3C7",   # soft yellow
-    "expense_sal":    "#FEE2E2",   # soft indigo
+    "expense_sal":    "#E0E7FF",   # soft indigo
+
+    # ── Profit status row colors ─────────────────────────────
+    "profit":  "#DCFCE7",   # soft green
+    "loss":    "#FEE2E2",   # soft red
 
 
 

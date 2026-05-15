@@ -9,7 +9,7 @@ from ui.excel_file_maker import export_to_excel
 
 class MembersFrame(ctk.CTkFrame):
     def __init__(self, content_area):
-        super().__init__(content_area, fg_color="transparent")
+        super().__init__(content_area, fg_color=DATA_FRAME_UI['content_bg_color'])
 
         self.grid_rowconfigure(0, weight=0)  # topbar
         self.grid_rowconfigure(1, weight=1)  # table expands
@@ -480,23 +480,6 @@ class MembersFrame(ctk.CTkFrame):
             sticky="ns"
         )
         
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # # Delete button — red tint, disabled by default
 # self.delete_btn = ctk.CTkButton(

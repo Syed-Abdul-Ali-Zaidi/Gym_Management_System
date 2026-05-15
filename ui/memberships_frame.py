@@ -9,7 +9,7 @@ from ui.excel_file_maker import export_to_excel
 
 class MembershipsFrame(ctk.CTkFrame):
     def __init__(self, content_area):
-        super().__init__(content_area, fg_color="transparent")
+        super().__init__(content_area, fg_color=DATA_FRAME_UI['content_bg_color'])
 
         self.grid_rowconfigure(0, weight=0)  # topbar
         self.grid_rowconfigure(1, weight=1)  # table expands
@@ -461,7 +461,9 @@ class MembershipsFrame(ctk.CTkFrame):
         
 
     def _build_form_fields(self, popup):
-            form_frame = ctk.CTkFrame(popup)
+            
+            form_frame = ctk.CTkFrame(popup, width=365, height=310)
+            form_frame.grid_propagate(False)
             form_frame.grid(row=0, column=0, padx=20, pady=10)
 
             # Row 0 - Member Selection

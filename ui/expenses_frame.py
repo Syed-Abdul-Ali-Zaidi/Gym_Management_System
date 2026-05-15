@@ -9,7 +9,7 @@ from ui.excel_file_maker import export_to_excel
 
 class ExpensesFrame(ctk.CTkFrame):
     def __init__(self, content_area):
-        super().__init__(content_area, fg_color="transparent")
+        super().__init__(content_area, fg_color=DATA_FRAME_UI['content_bg_color'])
 
         self.grid_rowconfigure(0, weight=0)  # topbar
         self.grid_rowconfigure(1, weight=1)  # table expands
@@ -509,11 +509,12 @@ class ExpensesFrame(ctk.CTkFrame):
         
 
     def _build_form_fields(self, popup):
-        form_frame = ctk.CTkFrame(popup)
+        form_frame = ctk.CTkFrame(popup, width=350, height=220)
+        form_frame.grid_propagate(False)
         form_frame.grid(row=0, column=0, padx=FORM_UI['padx'], pady=FORM_UI['pady'])
 
         self.type_toggle = ctk.CTkSegmentedButton(form_frame, values=["Operational", "Salary"], variable=self.type_var, command=self._on_type_change)
-        self.type_toggle.grid(row=0, column=0, columnspan = 2, padx=10, pady=(5,FORM_UI['row_pady']), sticky='nsew')
+        self.type_toggle.grid(row=0, column=0, columnspan = 2, padx=10, pady=(5,FORM_UI['row_pady']), sticky='n')
         # Row 0 - Name
         ctk.CTkLabel(form_frame, text="Plaese Enter expense Details:", font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size'])).grid(row=1, column=0, columnspan = 2, padx=10, pady=(5,FORM_UI['row_pady']), sticky=FORM_UI["label_sticky"])
         
