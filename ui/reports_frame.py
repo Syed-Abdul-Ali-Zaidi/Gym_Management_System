@@ -9,7 +9,7 @@ from ui.excel_file_maker import export_to_excel
 
 class ReportsFrame(ctk.CTkFrame):
     def __init__(self, content_area):
-        super().__init__(content_area, fg_color=DATA_FRAME_UI['content_bg_color'])
+        super().__init__(content_area, fg_color=DATA_FRAME_UI['content_bg_color'], border_width=2)
 
         # Tabview
         self.tabview = ctk.CTkTabview(self,

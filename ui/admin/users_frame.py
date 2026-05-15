@@ -9,7 +9,7 @@ from ui.excel_file_maker import export_to_excel
 
 class UsersFrame(ctk.CTkFrame):
     def __init__(self, content_area):
-        super().__init__(content_area, fg_color=DATA_FRAME_UI['content_bg_color'])
+        super().__init__(content_area, fg_color=DATA_FRAME_UI['content_bg_color'], border_width=2)
 
         self.grid_rowconfigure(0, weight=0)  # topbar
         self.grid_rowconfigure(1, weight=1)  # table expands
@@ -194,7 +194,7 @@ class UsersFrame(ctk.CTkFrame):
             height=DATA_FRAME_UI['btn_height'],
             state="disabled",
             font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
-            fg_color=DATA_FRAME_UI['edit_fg'],
+            fg_color=DATA_FRAME_UI['btn_fg'],
             hover_color=DATA_FRAME_UI['edit_hover'],
             text_color=DATA_FRAME_UI['edit_text'],
             border_width=DATA_FRAME_UI['btn_border'],
@@ -257,7 +257,7 @@ class UsersFrame(ctk.CTkFrame):
 
         # Clear selection after every search
         self.selected_row = None
-        self.selection_label.configure(text='No row selected')
+        self.selection_label.configure(text='No Row Selected')
         self.edit_btn.configure(state='disabled')
 
     def _on_row_select(self, event):

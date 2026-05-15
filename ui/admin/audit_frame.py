@@ -8,7 +8,7 @@ from ui.excel_file_maker import export_to_excel
 
 class AuditFrame(ctk.CTkFrame):
     def __init__(self, content_area):
-        super().__init__(content_area, fg_color=DATA_FRAME_UI['content_bg_color'])
+        super().__init__(content_area, fg_color=DATA_FRAME_UI['content_bg_color'], border_width=2)
 
         self.grid_rowconfigure(0, weight=0)  # topbar
         self.grid_rowconfigure(1, weight=1)  # table expands
@@ -167,7 +167,22 @@ class AuditFrame(ctk.CTkFrame):
             text_color=DATA_FRAME_UI['btn_text'],
             command=self._on_export
         )
-        self.export_btn.grid(row=1, column=7, padx=(4,6), pady=(1,6))
+        self.export_btn.grid(row=0, column=7, padx=(4, 6), pady=(6,1))
+
+        # ── Refresh button ───────────────────────────────────────
+        refresh_btn = ctk.CTkButton(
+            self.topbar_frame,
+            text="⭮ Refresh",
+            width=DATA_FRAME_UI['topbar_btn_width'],
+            height=DATA_FRAME_UI['btn_height'],
+            font=ctk.CTkFont(family=DATA_FRAME_UI['btn_font_family'], size=DATA_FRAME_UI['btn_font_size']),
+            fg_color=DATA_FRAME_UI['btn_fg'],
+            border_width=DATA_FRAME_UI['btn_border'],
+            hover_color=DATA_FRAME_UI['btn_hover'],
+            text_color=DATA_FRAME_UI['btn_text'],
+            command=self._on_search
+        )
+        refresh_btn.grid(row=1, column=7, padx=(4, 6), pady=(1,6))
 
 
     def _build_table(self):
@@ -309,7 +324,7 @@ class AuditFrame(ctk.CTkFrame):
         
         # Clear selection
         self.selected_row = None
-        self.selection_label.configure(text='No row selected')
+        self.selection_label.configure(text='No Row Selected')
 
     def _on_row_select(self, event):
         column_usernames = ['user_id', 'username', 'timestamp', 'action', 'table_name', 'old_value', 'new_value']

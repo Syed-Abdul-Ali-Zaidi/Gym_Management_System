@@ -21,7 +21,7 @@ APP_THEME = {
     "danger_red":          "#a20505",
     "danger_hover":        "#FACDCD",
 
-    # ── Success (edit button) ──────────────────────────────────────────────────
+    # ── Success (edit button) ─────────────────────────────────────────────────
     "success_green":        "#098A27",
     "success_hover":        "#B7F5CD",
 
@@ -34,13 +34,21 @@ APP_THEME = {
     "border_color":        "#1a2e45",
 
     # ── Sidebar ───────────────────────────────────────────────────────────────
-    "bg_color":      "#F3FAFF"
+    "bg_color":      "#F3FAFF",
+
+    # ── StripColors ───────────────────────────────────────────────────────────
+    "odd":       "#eeeeee",
+    "even":      "#f5f5f5",
+    "red":       "#FEE2E2",
+    "green":     "#DCFCE7",
+    "yellow":    "#FEF3C7",
+    "indigo":    "#E0E7FF"
 }
 
 # ── Global App Config ──────────────────────────────────────────────────────────
 GLOBAL_UI = {
     "theme":           "light",
-    "theme_color":     "blue",
+    "theme_color":     "dark-blue",
     "window_size":     "1100x600",
     "min_window_size": (900, 550),
     "font_family":     "Georgia",
@@ -69,11 +77,12 @@ LOGIN_UI = {
     # Colors
     "subtitle_color":     "gray",
     "error_color":        APP_THEME["danger_red"],
+    "btn_text":           APP_THEME["primary_color"],
 
     # ── Style: Login button ────────────────────────────────────────────────────
-    "btn_fg":             APP_THEME["primary_color_hover"],
+    "btn_fg":             "#FFFFFF",
     "btn_border":         1,
-    "btn_hover":          APP_THEME["primary_color"],
+    "btn_hover":          APP_THEME["primary_color_hover"],
 }
 
 # ── Sidebar ────────────────────────────────────────────────────────────────────
@@ -131,12 +140,12 @@ DATA_FRAME_UI = {
     "btn_font_size":      13,
 
     # ── Style: Standard (Search, Add, Export, Save, Cancel) ───────────────────
-    "btn_fg":             "#FFFFFF",
-    "btn_border":         1,
-    "btn_hover":          APP_THEME["primary_color_hover"],
-    "btn_text":           APP_THEME["primary_color"],
-    "divider_color":      APP_THEME["border_color"],
-    "content_bg_color":   APP_THEME['bg_color'],
+    "btn_fg":               "#FFFFFF",
+    "btn_border":           1,
+    "btn_hover":            APP_THEME["primary_color_hover"],
+    "btn_text":             APP_THEME["primary_color"],
+    "divider_color":        APP_THEME["border_color"],
+    "content_bg_color":     APP_THEME['bg_color'],
 
     # ── Style: Edit ───────────────────────────────────────────────────────────
     "edit_fg":            "transparent",
@@ -152,52 +161,48 @@ DATA_FRAME_UI = {
     "error_text":         APP_THEME["danger_red"],
 
     # ── Table strips ──────────────────────────────────────────────────────────
-    "even":               "#eeeeee",
-    "odd":                "#f5f5f5",
+    "even":                APP_THEME['even'],
+    "odd":                 APP_THEME['odd'],
 
     # ── Trainer status row colors ─────────────────────────────
-    "trainer_active":      "#DCFCE7",   # soft green
-    "trainer_on_leave":    "#FEF3C7",   # soft yellow
-    "trainer_terminated":  "#FEE2E2",   # soft red
+    "trainer_active":      APP_THEME['green'],   # soft green
+    "trainer_on_leave":    APP_THEME['yellow'],  # soft yellow
+    "trainer_terminated":  APP_THEME['red'],     # soft red
 
     # ── Member status row colors ─────────────────────────────
-    "member_active":      "#DCFCE7",   # soft green
-    "member_inactive":    "#FEE2E2",   # soft red
+    "member_active":       APP_THEME['green'],   # soft green
+    "member_inactive":     APP_THEME['red'],     # soft red
 
     # ── Plan status row colors ─────────────────────────────
-    "plan_active":           "#DCFCE7",   # soft green
-    "plan_discontinued":  "#FEE2E2",   # soft red
+    "plan_active":         APP_THEME['green'],   # soft green
+    "plan_discontinued":   APP_THEME['red'],     # soft red
 
     # ── User status row colors ─────────────────────────────
-    "user_active":      "#DCFCE7",   # soft green
-    "user_inactive":    "#FEE2E2",   # soft red
+    "user_active":         APP_THEME['green'],   # soft green
+    "user_inactive":       APP_THEME['red'],     # soft red
 
     # ── AuditLog status row colors ─────────────────────────────
-    "audit_insert":      "#DCFCE7",   # soft green
-    "audit_update":      "#FEF3C7",   # soft yellow
-    "audit_delete":      "#FEE2E2",   # soft red
+    "audit_insert":        APP_THEME['green'],   # soft green
+    "audit_update":        APP_THEME['yellow'],  # soft yellow
+    "audit_delete":        APP_THEME['red'],     # soft red
 
     # ── Membership status row colors ─────────────────────────────
-    "membership_active":      "#DCFCE7",   # soft green
-    "membership_cancelled":      "#FEF3C7",   # soft yellow
-    "membership_expired":      "#FEE2E2",   # soft red
-    "membership_upcoming":   "#E0E7FF",    # soft INdigo
+    "membership_active":   APP_THEME['green'],   # soft green
+    "membership_cancelled":APP_THEME['yellow'],  # soft yellow
+    "membership_expired":  APP_THEME['red'],     # soft red
+    "membership_upcoming": APP_THEME['indigo'],  # soft INdigo
 
     # ── Payment status row colors ─────────────────────────────
-    "payment_paid":      "#DCFCE7",   # soft green
-    "payment_unpaid":    "#FEE2E2",   # soft red
+    "payment_paid":        APP_THEME['green'],   # soft green
+    "payment_unpaid":      APP_THEME['red'],     # soft red
 
     # ── Expense Type row colors ─────────────────────────────
-    "expense_op":      "#FEF3C7",   # soft yellow
-    "expense_sal":    "#E0E7FF",   # soft indigo
+    "expense_op":          APP_THEME['yellow'],   # soft yellow
+    "expense_sal":         APP_THEME['indigo'],   # soft indigo
 
     # ── Profit status row colors ─────────────────────────────
-    "profit":  "#DCFCE7",   # soft green
-    "loss":    "#FEE2E2",   # soft red
-
-
-
-
+    "profit":              APP_THEME['green'],   # soft green
+    "loss":                APP_THEME['red'],     # soft red
     }
 
 # ── Popup Form UI — Used by every frame's popup ────────────────────────────────
