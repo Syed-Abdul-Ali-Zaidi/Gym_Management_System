@@ -7,16 +7,27 @@ def active_members_per_plan():
     try:
         cursor = conn.cursor(dictionary=True)
         query = """
-            SELECT
+            SELECT 
+                mp.plan_id,
                 mp.plan_name,
-                COUNT(mv.member_id) AS active_count,
-                COALESCE(SUM(mv.agreed_plan_fee),0) AS revenue
+                COUNT(p.member_id) AS active_count,
+                COALESCE(SUM(
+                    CASE 
+                        WHEN p.payment_status = 'Paid' THEN mv.agreed_plan_fee 
+                        ELSE 0 
+                    END
+                ), 0) AS revenue
             FROM membership_plan mp
-            LEFT JOIN memberships_view mv
-                ON  mp.plan_id = mv.plan_id
+            LEFT JOIN memberships_view mv 
+                ON mp.plan_id = mv.plan_id 
                 AND mv.status = 'Active'
-            GROUP BY mp.plan_name
-            ORDER BY active_count DESC
+            LEFT JOIN payment_view p 
+                ON mv.member_id = p.member_id 
+                AND mv.plan_id = p.plan_id 
+                AND mv.start_date = p.start_date 
+                AND p.payment_status = 'Paid'
+            GROUP BY mp.plan_id, mp.plan_name
+            ORDER BY active_count DESC;
         """
         cursor.execute(query)
         rows = cursor.fetchall() 
@@ -38,12 +49,22 @@ def trainer_workload():
                 t.trainer_id, 
                 t.name, 
                 t.salary,
-                COUNT(mv.member_id) AS assigned_members,
-                COALESCE(SUM(mv.agreed_trainer_fee), 0) AS trainer_revenue
+                COUNT(p.member_id) AS assigned_members,
+                COALESCE(SUM(
+                    CASE 
+                        WHEN p.payment_status = 'Paid' THEN mv.agreed_trainer_fee 
+                        ELSE 0 
+                    END
+                ), 0) AS trainer_revenue
             FROM trainer t
             LEFT JOIN memberships_view mv 
                 ON t.trainer_id = mv.trainer_id 
                 AND mv.status = 'Active'
+            LEFT JOIN payment_view p 
+            ON mv.member_id = p.member_id 
+            AND mv.plan_id = p.plan_id 
+            AND mv.start_date = p.start_date 
+            AND p.payment_status = 'Paid'
             WHERE t.status = 'Active'
             GROUP BY t.trainer_id, t.name, t.salary
             ORDER BY assigned_members DESC
@@ -68,7 +89,7 @@ def monthly_revenue():
                 YEAR(payment_date)  AS year,
                 MONTH(payment_date) AS month,
                 SUM(amount)         AS total_revenue,
-                COUNT(*)            AS total_payments
+                COUNT(*)            AS no_of_transaction
             FROM payment_view
             WHERE payment_status = 'Paid'
             GROUP BY year, month
@@ -93,7 +114,8 @@ def monthly_expenses():
             SELECT
                 YEAR(expense_date)  AS year,
                 MONTH(expense_date) AS month,
-                SUM(amount)         AS total_expenses
+                SUM(amount)         AS total_expense,
+                COUNT(*)            AS no_of_transaction
             FROM expense
             GROUP BY year, month
             ORDER BY year DESC, month DESC
