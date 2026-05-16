@@ -401,7 +401,7 @@ class MembershipsFrame(ctk.CTkFrame):
 
         # ── 2. Initialize Variables ───────────────────────────────────────────
         self.mem_id_var             = ctk.StringVar()
-        self.mem_name_var           = ctk.StringVar(value="Not Found")
+        self.mem_name_var           = ctk.StringVar(value="❌ Not Found")
         self.pln_selection_var      = ctk.StringVar(value="Select Plan")
         self.start_date_var         = ctk.StringVar()
         self.end_date_var           = ctk.StringVar()

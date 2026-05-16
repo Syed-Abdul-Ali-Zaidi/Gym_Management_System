@@ -224,12 +224,13 @@ class TrainersFrame(ctk.CTkFrame):
         # inserts New Data
         for row in rows:
             tag = row['status']
-            formatted_id = f'TRN-{row['trainer_id']}'
+            formatted_id = f"TRN-{row['trainer_id']}"
+            formatted_phone = f"+{row['phone_no']}"
         
             self.table.insert(parent='', index= 'end', values=(
                 formatted_id,
                 row['name'],
-                row['phone_no'] or '',  # if there is a NULL value Tree will show None so replace it with ""
+                formatted_phone or '',  # if there is a NULL value Tree will show None so replace it with ""
                 row['salary'],
                 row['specialization'] or '',
                 row['status'],
@@ -322,9 +323,12 @@ class TrainersFrame(ctk.CTkFrame):
                 clean_spec = spec.strip()
                 if clean_spec in self.specialization_var:
                     self.specialization_var[clean_spec].set(True)
-                    
+
+            # There is a problem that the ctk automatically removes the + from the phone no so we have to add it
+            formatted_phone = f"+{self.selected_row['phone_no']}"
+
             self.name_var.          set(self.selected_row['name'])
-            self.phone_var.         set(self.selected_row['phone_no'] or '')
+            self.phone_var.         set(formatted_phone or '')
             self.salary_var.        set(self.selected_row['salary'])
             self.status_var.        set(self.selected_row['status'])
             self.default_fee_var.   set(self.selected_row['default_fee'] or '0')
@@ -408,37 +412,42 @@ class TrainersFrame(ctk.CTkFrame):
         # Check if at least ONE checkbox is ticked
         specialization = False
         for var in self.specialization_var.values():
-            specialization = True
-            break
+            if var.get():
+                specialization = True
+                break
 
         # Required: Name
         if not name:
             self._form_error("⚠ Name is required.")
             return
-        elif len(name) < 2 or len(name) > 50:
+        if len(name) < 2 or len(name) > 50:
             self._form_error("⚠ Name must be 2-50 characters.")
             return
         
+        # Required: Phone
+        if len(phone) != 13 or not str(phone).startswith('+92'):
+            self._form_error("⚠ Enter Valid phone number(+92...).")
+            return
+        
         # Required: salary
-        elif not self.is_float(salary):
+        if not self.is_float(salary):
             self._form_error("⚠ Please enter Salary in numbers only.")
             return
 
-        # Required: status
-        elif status not in ('Active', 'On-leave', 'Terminated'):
-            self._form_error("⚠ Status is required.")
-            return
-        
-        elif not specialization:
+        # Required: specialization
+        if not specialization:
             self._form_error("Please select a specialization.")
             return
 
-        # Required: Phone
-        # have to be done
-
+        # Required: status
+        if status not in ('Active', 'On-leave', 'Terminated'):
+            self._form_error("⚠ Status is required.")
+            return
+                
         if not self.is_float(defaultfee):
             self._form_error("Please enter Default Fee in numbers only.")
     
+        
         # All passed
         self._form_ok()
 
@@ -455,7 +464,7 @@ class TrainersFrame(ctk.CTkFrame):
 
     def _on_save(self, popup, mode):
         name           = self.name_var.get().strip()
-        phone          = self.phone_var.get().strip()
+        phone          = self.phone_var.get().strip().replace('+','')
         salary         = self.salary_var.get().strip()
         status         = self.status_var.get().strip()
         defaultfee     = self.default_fee_var.get().strip() or '0'  # Since DefaultFee is optional so if it is '' so replace it with '0'

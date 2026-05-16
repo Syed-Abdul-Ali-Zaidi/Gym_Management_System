@@ -44,7 +44,7 @@ def search_payment(searchterm, status_active_filters, method_active_filters):
                 SELECT *
                 FROM payment_view
                 WHERE  payment_status IN ({status_placeholders}) AND (method IN ({method_placeholders}) OR method IS NULL) AND (member_id = %s OR member_name LIKE %s OR plan_id = %s)
-                ORDER by payment_status
+                ORDER by payment_status DESC, payment_date DESC
             """
             cursor.execute(query, tuple(status_active_filters) + tuple(method_active_filters) + (id_val, name_term, id_val))
         else:
@@ -52,7 +52,7 @@ def search_payment(searchterm, status_active_filters, method_active_filters):
                 SELECT *
                 FROM payment_view
                 WHERE  payment_status IN ({status_placeholders}) AND (member_id = %s OR member_name LIKE %s OR plan_id = %s)
-                ORDER by payment_status
+                ORDER by payment_status DESC, payment_date DESC
             """
             cursor.execute(query, tuple(status_active_filters) + (id_val, name_term, id_val))
 

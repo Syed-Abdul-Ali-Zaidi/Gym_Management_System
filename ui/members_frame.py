@@ -222,13 +222,14 @@ class MembersFrame(ctk.CTkFrame):
         for row in rows:
             tag = row['status']
 
-            formatted_id = f'MEM-{row['member_id']}'
+            formatted_id = f"MEM-{row['member_id']}"
+            formatted_phone = f"+{row['phone_no']}"
             formatted_date = row['join_date'].strftime("%d-%m-%Y")
 
             self.table.insert(parent='', index= 'end', values=(
                 formatted_id,
                 row['name'],
-                row['phone_no'] or '',  # if there is a NULL value Tree will show None so replace it with ""
+                formatted_phone or '',  # if there is a NULL value Tree will show None so replace it with ""
                 row['gender'],
                 row['status'],
                 formatted_date),
@@ -312,8 +313,11 @@ class MembersFrame(ctk.CTkFrame):
         self._build_form_buttons(popup, mode)
 
         if mode == 'edit':
+            # There is a problem that the ctk automatically removes the + from the phone no so we have to add it
+            formatted_phone = f"+{self.selected_row['phone_no']}"
+
             self.name_var.set(self.selected_row['name'])
-            self.phone_var.set(self.selected_row['phone_no'] or '')
+            self.phone_var.set(formatted_phone or '')
             self.gender_var.set(self.selected_row['gender'])
             self.status_var.set(self.selected_row['status'])
             self.join_date_var.set(self.selected_row['join_date'])
@@ -410,6 +414,11 @@ class MembersFrame(ctk.CTkFrame):
             self._form_error("⚠ Date must be valid DD-MM-YYYY.")
             return
         
+        # Reqired: Phone No.
+        if len(phone) != 13 or not str(phone).startswith('+92'):
+            self._form_error("⚠ Enter Valid phone number(+92...).")
+            return
+        
         # All passed
         self._form_ok()
 
@@ -428,7 +437,7 @@ class MembersFrame(ctk.CTkFrame):
         from datetime import datetime
 
         name      = self.name_var.get().strip()
-        phone     = self.phone_var.get().strip()
+        phone     = self.phone_var.get().strip().replace('+','')
         gender    = self.gender_var.get().strip()
         status    = self.status_var.get().strip()
         join_date = self.join_date_var.get().strip()
