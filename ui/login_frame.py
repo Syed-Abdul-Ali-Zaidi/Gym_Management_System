@@ -24,7 +24,7 @@ class LoginFrame(ctk.CTkFrame):
         self.on_success = on_success
 
         # ── Background Image ─────────────────────────────
-        bg_image = Image.open("background3_1.png")
+        bg_image = Image.open("assets/background3_1.png")
 
         self.bg_photo = ctk.CTkImage(
             light_image=bg_image,
