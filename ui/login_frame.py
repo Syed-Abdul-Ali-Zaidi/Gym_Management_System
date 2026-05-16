@@ -24,7 +24,7 @@ class LoginFrame(ctk.CTkFrame):
         self.on_success = on_success
 
         # ── Background Image ─────────────────────────────
-        bg_image = Image.open("background.jpg")
+        bg_image = Image.open("background3_1.png")
 
         self.bg_photo = ctk.CTkImage(
             light_image=bg_image,
@@ -162,6 +162,7 @@ class LoginFrame(ctk.CTkFrame):
         self.login_btn = ctk.CTkButton(
             self.card,
             text="Login",
+            text_color=LOGIN_UI['btn_text'],
             width=LOGIN_UI['entry_width'],
             height=LOGIN_UI['entry_height'] + 2,
             font=ctk.CTkFont(family=LOGIN_UI['font_family'], size=LOGIN_UI['button_font_size'], weight="bold"),

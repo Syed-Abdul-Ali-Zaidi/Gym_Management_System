@@ -196,7 +196,6 @@ def delete_membership(member_id: int, plan_id: int, start_date):
         return True
     except Exception as e:
         conn.rollback()
-        print(f"Error: {e}")
         return False
     finally:
         conn.close()
