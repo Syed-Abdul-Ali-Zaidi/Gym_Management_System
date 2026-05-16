@@ -146,6 +146,8 @@ DATA_FRAME_UI = {
     "btn_text":             APP_THEME["primary_color"],
     "divider_color":        APP_THEME["border_color"],
     "content_bg_color":     APP_THEME['bg_color'],
+    "card_fg_color":        "#F8FAFC",
+    "card_border_color":    "#C9D8F0",
 
     # ── Style: Edit ───────────────────────────────────────────────────────────
     "edit_fg":            "transparent",
